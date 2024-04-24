@@ -29,7 +29,7 @@ export default function TagCloud({
         totalTags * 2,
         generateTagsPrompt
       );
-      const tagOptions = tagString.split(",");
+      const tagOptions = tagString.split(/"/);
       setTags(tagOptions.map((text) => ({ text: text, selected: false })));
     };
     generateTags();
