@@ -15,7 +15,7 @@ export default function MapPage() {
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
         <div className="flex flex-col">
           <input
-            className="p-4 rounded-lg w-full"
+            className="p-2 rounded-lg w-full"
             type="text"
             onChange={(e) => setMapDescription(e.target.value)}
             placeholder="What do you want to do?"
