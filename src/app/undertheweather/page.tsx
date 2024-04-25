@@ -16,19 +16,19 @@ type Artwork = {
 
 //An example of making an art critic game
 
-export default function ArtcriticPage() {
+export default function UnderTheWeatherPage() {
   const [keywords, setKeywords] = useState<string>("Selected Keywords...");
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [message, setMessage] = useState<string>("Generate Excuse");
-  const [critiqueAudio, setCritiqueAudio] = useState<string>("");
+  const [score, setScore] = useState(0);
 
   async function handleCreate() {
     setMessage("Generating Excuse...");
     //generate the image description
     const description = await getGroqCompletion(
       `Describe the scenario that your employee has told you about why they need the day off work using the following: ${keywords}.`,
-      150,
+      200,
       describeImagePrompt
     );
 
@@ -43,20 +43,23 @@ export default function ArtcriticPage() {
       "As the employer, assess the plausibility of their reason."
     );
 
+     // Determine if the critique is considered plausible
+    const isPlausible = critique.toLowerCase().includes("this is a valid"); // Adjust this logic as needed
+
+     // Update the score based on the plausibility
+    const newScore = isPlausible ? parseInt(score) + 1 : parseInt(score);
+
     setMessage("Result...");
-    //generate a score
-    const score = await getGroqCompletion(
-      `The scenario is described as follows: ${description}. It was critiqued as follows: ${critique}`,
-      4,
-      "Increase score by 1 if the reason is plausible. Only display score number."
-    );
+    // Update the score state
+    setScore(newScore.toString());
 
     //update the scenario object and add to our state to display it
     const newArtwork = {
       description,
       imageUrl,
       critique,
-      score,
+      score: newScore.toString(),
+
     };
     setArtworks([...artworks, newArtwork]);
     setSelectedArtwork(newArtwork);
@@ -81,7 +84,7 @@ export default function ArtcriticPage() {
             <div className="flex flex-col pb-4">
               <span className="p-2">{selectedArtwork.description}</span>
               <span className="p-2">Assessment: {selectedArtwork.critique}</span>
-              <span className="p-2">Score: {selectedArtwork.score}</span>
+              <span className="p-2">Day Streak: {selectedArtwork.score}</span>
               <img src={selectedArtwork.imageUrl} />
             </div>
           )}
