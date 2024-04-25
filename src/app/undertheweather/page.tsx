@@ -27,7 +27,7 @@ export default function ArtcriticPage() {
     setMessage("Generating Excuse...");
     //generate the image description
     const description = await getGroqCompletion(
-      `Describe the reason selected by the employee: ${keywords}`,
+      `Describe the scenario that your employee has told you about why they need the day off work using the following: ${keywords}.`,
       150,
       describeImagePrompt
     );
@@ -38,17 +38,17 @@ export default function ArtcriticPage() {
     setMessage("Assessing...");
     //generate a critique
     const critique = await getGroqCompletion(
-      `The employee has given the following description for why they can't come to work: ${description}`,
-      150,
+      `The employee has given the following description: ${description}`,
+      100,
       "As the employer, assess the plausibility of their reason."
     );
 
-    setMessage("Scoring artwork...");
+    setMessage("Result...");
     //generate a score
     const score = await getGroqCompletion(
-      `The player selected a excuse for taking the day off day based on the following: ${description}. It was critiqued as follows: ${critique}`,
+      `The scenario is described as follows: ${description}. It was critiqued as follows: ${critique}`,
       4,
-      "If the reason is plausible, increase the score by 1. Only display the number."
+      "Increase score by 1 if the reason is plausible. Only display score number."
     );
 
     //update the scenario object and add to our state to display it
@@ -79,12 +79,13 @@ export default function ArtcriticPage() {
           </button>
           {selectedArtwork && (
             <div className="flex flex-col pb-4">
-              <span>{selectedArtwork.description}</span>
-              <span>Score: {selectedArtwork.score}</span>
+              <span className="p-2">{selectedArtwork.description}</span>
+              <span className="p-2">Assessment: {selectedArtwork.critique}</span>
+              <span className="p-2">Score: {selectedArtwork.score}</span>
               <img src={selectedArtwork.imageUrl} />
             </div>
           )}
-
+<p className="text-center p-2">Journal</p>
           <ImageGallery
             images={artworks.map((a) => a.imageUrl)}
             handleClickImage={(id) => setSelectedArtwork(artworks[id])}

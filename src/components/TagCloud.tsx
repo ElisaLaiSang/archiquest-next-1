@@ -29,7 +29,7 @@ export default function TagCloud({
         totalTags * 2,
         generateTagsPrompt
       );
-      const tagOptions = tagString.split(/"/);
+      const tagOptions = tagString.split(/\d+/);
       setTags(tagOptions.map((text) => ({ text: text, selected: false })));
     };
     generateTags();
@@ -52,7 +52,7 @@ export default function TagCloud({
           key={i}
           className={`rounded-lg ${
             t.selected ? "bg-slate-500" : "bg-white"
-          } p-2 hover:shadow m-2`}
+          } p-2 hover:shadow m-4`}
         >
           {t.text}
         </button>

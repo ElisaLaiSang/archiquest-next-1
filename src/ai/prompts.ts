@@ -1,5 +1,7 @@
 export const describeImagePrompt =
-  "You are an employee. Your employee gives you a reason why they need to take the day off work. Assess whether their reason is plausible.";
+  "You are an employee. Create a response based off the reasons given by your employee as to why they need to take the day off work. Add a bit of sass to your response.";
 
 export const generateTagsPrompt =
-  "The user will provide you with a description of something that needs to be tagged. Generate 5 of short sentences of the description. Only generate the excuses, no other explanation needed. Only generate the sentences.";
+  "The user will provide you with a description of something that needs to be tagged. Generate short sentences of the description with a maximum of 10 words each. Only generate the excuses, no other explanation needed. Do not include any numbers.";
+
+
