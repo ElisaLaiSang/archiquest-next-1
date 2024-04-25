@@ -25,13 +25,14 @@ export default function UnderTheWeatherPage() {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [message, setMessage] = useState<string>("Generate Assessment");
   const [score, setScore] = useState<string>("0");
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   async function handleCreate() {
     setMessage("Generating Assessment...");
 
     //generate the image description
     const description = await getGroqCompletion(
-      `Describe the scenario that ${playerName} has told you about why they need the day off work using the following: ${keywords}.`,
+      `Combine the ${keywords} to create a scenario for why your employee said they cant come to work today. Make it make sense`,
       200,
       describeImagePrompt
     );
@@ -72,6 +73,11 @@ export default function UnderTheWeatherPage() {
 
   }
 
+  const toggleAudio = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-amber-100 border border-neutral-800 custom-border rounded-2xl">
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
@@ -97,6 +103,10 @@ export default function UnderTheWeatherPage() {
             images={artworks.map((a) => a.imageUrl)}
             handleClickImage={(id) => setSelectedArtwork(artworks[id])}
           />
+
+             {/* Audio player */}
+          <audio className="p-2" src="https://cdn.pixabay.com/download/audio/2022/11/15/audio_dd883ed7eb.mp3" controls autoPlay/>
+ 
         </div>
       </div>
     </main>
