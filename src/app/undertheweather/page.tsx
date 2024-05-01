@@ -7,9 +7,12 @@ import ImageGallery from "@/components/ImageGallery";
 import { getGroqCompletion } from "@/ai/groq";
 import { generateImageFal} from "@/ai/fal";
 import Link from "next/link";
+import SpeechRecognition from '@/components/SpeechRecognition';
 
-    // Get the player's name and special skill
-    const playerName = document.getElementById("playerName");
+  const handleTranscript = (transcript: string) => {
+      console.log('Transcript:', transcript);
+      // Call your function to process the transcript here
+  };
 
 type Artwork = {
   description: string;
@@ -102,8 +105,8 @@ export default function UnderTheWeatherPage() {
         </div>
       </div>
 
-      <div>
-      {isTyping && <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">Boss is typing...</div>}
+      <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
+      {isTyping && <div>Boss is typing...</div>}
       </div>
 
       <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
@@ -116,6 +119,7 @@ export default function UnderTheWeatherPage() {
             placeholder="Message"
             className="ml-3 mt-6 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-3"
           />
+          <SpeechRecognition onTranscript={handleTranscript} />
           <button
             className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3"
             onClick={handleCreate}
@@ -144,6 +148,7 @@ export default function UnderTheWeatherPage() {
       <div className="flex flex-col">
         <span className="p-2 text-white mt-4 mr-3">Day Streak: {score}</span>
       </div>
+
         
       <Link href="/">
         <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">

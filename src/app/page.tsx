@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export default function Home() {
   const [playerName, setPlayerName] = useState(""); // Initialize playerName state
-  const [playerSpecialSkill, setPlayerSpecialSkill] = useState(""); // Initialize playerSpecialSkill state
+
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cover bg-center" style={{ backgroundImage: `url('/startPageImage.png')` }}>

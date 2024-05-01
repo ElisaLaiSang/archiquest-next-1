@@ -68,7 +68,7 @@ export default function TagCloud({
         <button
           key={i}
           onClick={() => handleTagSelect(i)}
-          className={`rounded-lg ${t.selected ? "bg-slate-500" : "bg-gray-300"
+          className={`rounded-lg ${t.selected ? "bg-slate-500" : "bg-gray-200"
           } p-2 hover:shadow m-3`}
         >
           {t.text}
