@@ -79,11 +79,11 @@ export default function UnderTheWeatherPage() {
 
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-amber-100 border border-neutral-800 custom-border rounded-2xl">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-sky-300" >
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex bg-white">
         <div className="flex flex-col">
           <TagCloud
-            prompt="Your employee needs to take the day off due to unforseen events or sickness. Make it creative with a slight touch of unbelievability."
+            prompt="A reason for why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Do not include any other explanation."
             totalTags={100}
             handleSelect={(tags) => setKeywords(tags.join(", "))}
           />
