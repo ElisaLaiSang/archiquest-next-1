@@ -90,7 +90,7 @@ export default function UnderTheWeatherPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-sky-300 font-mono text-sm" >
-      <div id="phoneBorder" className="z-10 p-5 max-w-5xl bg-zinc-700 rounded-lg ">
+      <div id="phoneBorder" className="w-3/4 md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative">
       
       <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
         <div>
