@@ -27,6 +27,8 @@ export default function UnderTheWeatherPage() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [remainingTime, setRemainingTime] = useState(30);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [gameEndCount, setGameEndCount] = useState(0); // State variable to track the number of times the game has ended
+  
 
   useEffect(() => {
     // Start the 15-second timer when the component mounts
@@ -35,8 +37,11 @@ export default function UnderTheWeatherPage() {
         if (prevTime > 0) {
           return prevTime - 1;
         } else {
-          clearInterval(timer); // Clear the interval when remainingTime reaches 0
-          return 0;
+          // Reset timer to 30 seconds
+          setRemainingTime(30);
+          // Call generateBossTimerResponse immediately after resetting the timer
+          ;
+          return 30; 
         }
       });
     }, 1000); // Update every second
@@ -53,7 +58,7 @@ export default function UnderTheWeatherPage() {
   }, [remainingTime]);
 
   const generateBossTimerResponse = async () => {
-    const generatedText = await getGroqCompletion("You are the employer and your employee is taking a while to reply to your message. Create a response questioning why they are taking so long. Add a bit of sass. Make the message short and limited to 10 words. This communication  is via SMS", 25);
+    const generatedText = await getGroqCompletion("You are the employer and your employee is taking a while to reply to your message. Create a response questioning why they are taking so long. Sassy but professional. Make the message short and limited to 10 words. This communication  is via SMS", 25);
     setMessageHistory(prevHistory => [...prevHistory, { description: generatedText, imageUrl: "", critique: "", score: "" }]);
   };
 
@@ -117,7 +122,7 @@ export default function UnderTheWeatherPage() {
 
     const imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
 
-    setMessage("...");
+    setMessage("Sent");
 
     const critique = await getGroqCompletion(
       `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Limit your response to under 50 words.`,
@@ -129,7 +134,7 @@ export default function UnderTheWeatherPage() {
     // Set the delayed critique value
     setDelayedCritique(critique);
   
-    setMessage("Sent");
+    setMessage("Send");
   
     const isPlausible = critique.toLowerCase().includes("valid");
     const newScore = isPlausible ? parseInt(score) + 1 : parseInt(score);
@@ -193,7 +198,7 @@ export default function UnderTheWeatherPage() {
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Message"
+              placeholder="Say something quick..."
               className="ml-3 mt-6 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-3"
             />
             <button
@@ -223,7 +228,7 @@ export default function UnderTheWeatherPage() {
        </div>
 
         <div className="flex justify-between w-full items-center">
-          <audio className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2022/11/15/audio_dd883ed7eb.mp3" controls autoPlay />
+          <audio className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay />
 
           <div className="flex justify-between">
             <div className="flex flex-col">
