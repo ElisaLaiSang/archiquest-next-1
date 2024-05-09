@@ -7,3 +7,5 @@ export const generateTagsPrompt =
 export const generateExcuse = "You are an employee who has to convince your employer that you need the day off work. Even if the tags chosen are not believable, try to make it convincing. The response should be short and in SMS style. Keep the response under 50 words. Be witty."
 
 export const generateCoordinatesPrompt = ""
+
+export const describeImagePrompt = ""
