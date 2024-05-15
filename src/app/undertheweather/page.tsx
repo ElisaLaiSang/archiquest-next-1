@@ -58,7 +58,7 @@ export default function UnderTheWeatherPage() {
   }, [remainingTime]);
 
   const generateBossTimerResponse = async () => {
-    const generatedText = await getGroqCompletion("You are the employer and your employee is taking a while to reply to your message. Create a response questioning why they are taking so long. Sassy but professional. Make the message short and limited to 10 words. This communication  is via SMS", 25);
+    const generatedText = await getGroqCompletion("You are the employer and your employee is taking a while to reply to your message. Create a response questioning why they are taking so long. Sassy but professional. Make the message short and limited to 10 words. This communication is via SMS", 25);
     setMessageHistory(prevHistory => [...prevHistory, { description: generatedText, imageUrl: "", critique: "", score: "" }]);
 
     await generateTags(generatedText);
@@ -131,8 +131,14 @@ export default function UnderTheWeatherPage() {
       40,
       );
 
+      const imageStyle = `The image should be taken as a very quick selfie based on the ${description}. It might look a bit blurred.`;
+
+      const imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
+  
+      setMessage("...");
+
     const critique = await getGroqCompletion(
-      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Limit your response to under 30 words.`,
+      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Limit your response to under 30 words. Only generate the response, no other text.`,
       75,
     );
 
@@ -151,7 +157,7 @@ export default function UnderTheWeatherPage() {
 
     const newExcuse = {
       description,
-      imageUrl: "",
+      imageUrl,
       critique: "", // Initialize critique as an empty string
       score: newScore.toString(),
     };
@@ -161,28 +167,6 @@ export default function UnderTheWeatherPage() {
 
     await generateTags(critique);
   }
-
-  const handleImageGeneration = async () => {
-    const lastExcuse = messageHistory[messageHistory.length - 1];
-    const prompt = `Generate an image based on the following scenario: ${lastExcuse.description}. The critique from the boss is "${lastExcuse.critique}". The image should be a selfie depicting the scenario.`;
-    const imageStyle = `The image should be taken as a very quick selfie based on the ${lastExcuse.description}. It might look a bit blurred.`;
-  
-    const imageUrl = await generateImageFal(`${prompt} ${imageStyle}`, "landscape_16_9");
-  
-    const newCritique = await getGroqCompletion(
-      `You are the employer, give a response based on the following image: ${imageUrl}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Limit your response to under 50 words.`,
-      100,
-    );
-  
-    const newExcuse = {
-      description: lastExcuse.description,
-      imageUrl,
-      critique: newCritique,
-      score: lastExcuse.score,
-    };
-  
-    setMessageHistory((prevHistory) => [...prevHistory.slice(0, -1), newExcuse]);
-  };
 
   // Function to toggle audio
   const toggleAudio = () => {
@@ -209,7 +193,7 @@ export default function UnderTheWeatherPage() {
                   <span className="rounded-lg p-2 bg-sky-500 m-4 ">
                     {message.description}
                   </span>
-                <img className="rounded-lg m-4" src={message.imageUrl} />
+                  <img className="rounded-lg m-4" src={message.imageUrl} />
                 <span className="rounded-lg p-2 bg-zinc-200 m-4">
                   {message.critique}
                 </span>
@@ -232,12 +216,6 @@ export default function UnderTheWeatherPage() {
               placeholder="Say something quick..."
               className="ml-3 mt-6 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-3"
             />
-                <button
-                  className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3"
-                  onClick={handleImageGeneration}
-                >
-                  Photo
-                </button>
             <button
               className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3"
               onClick={() => generateTags()}>
