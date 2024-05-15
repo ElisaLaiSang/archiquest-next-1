@@ -138,7 +138,7 @@ export default function UnderTheWeatherPage() {
       setMessage("...");
 
     const critique = await getGroqCompletion(
-      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Limit your response to under 30 words. Only generate the response, no other text.`,
+      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Limit your response to under 30 words. Only generate the response, do not include any other text.`,
       75,
     );
 
