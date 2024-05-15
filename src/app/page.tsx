@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import React, {useEffect } from "react";
 
+
 function Clock() {
   const [time, setTime] = useState(new Date());
 
@@ -17,6 +18,7 @@ function Clock() {
   }, []); // Empty dependency array ensures effect runs only once on component mount
 
   const formattedTime = `${time.getHours()}:${time.getMinutes().toString().padStart(2, '0')}`;
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   return (
     <div className="font-mono p-10 text-5xl font-bold text-white">
@@ -39,6 +41,10 @@ export default function Home() {
               START
             </button>
           </Link>
+          <div className="flex justify-between w-full items-center">
+          <audio className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_f3ad5c138e.mp3" autoPlay preload="auto"/>
+
+          </div>
       </div>
     </main>
   );

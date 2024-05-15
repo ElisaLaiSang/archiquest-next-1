@@ -27,3 +27,9 @@ body {
 .custom-border {
   border-width: 30px;
 }
+
+.generated-text {
+  background-color: #e4e4e7; /* Example background color */
+  padding: 8px;
+  border-radius: 4px;
+}

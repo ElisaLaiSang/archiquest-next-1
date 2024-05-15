@@ -60,6 +60,8 @@ export default function UnderTheWeatherPage() {
   const generateBossTimerResponse = async () => {
     const generatedText = await getGroqCompletion("You are the employer and your employee is taking a while to reply to your message. Create a response questioning why they are taking so long. Sassy but professional. Make the message short and limited to 10 words. This communication  is via SMS", 25);
     setMessageHistory(prevHistory => [...prevHistory, { description: generatedText, imageUrl: "", critique: "", score: "" }]);
+
+    await generateTags(generatedText);
   };
 
   useEffect(() => {
@@ -85,9 +87,12 @@ export default function UnderTheWeatherPage() {
   }, [delayedCritique]);
 
   // Function to handle generating tags
-  const generateTags = async () => {
+  const generateTags = async (lastMessageDescription = "") => {
+    const prompt = lastMessageDescription
+    ? `Generate 5 SMS responses following the description: "${lastMessageDescription}". The response should be from the perspective of the employee. Only generate the responses, no other explanation is required. The responses should be no longer than 5 words.`
+    : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`;
     const tagString = await getGroqCompletion(
-      `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`, 100, generateTagsPrompt);
+      prompt, 100, generateTagsPrompt);
     const tagOptions = tagString.split(".");
     const filteredTags = tagOptions
       .map((text) => text.trim())
@@ -110,23 +115,25 @@ export default function UnderTheWeatherPage() {
 
     setRemainingTime(30);
   
-    const description = await getGroqCompletion(
-      keywords === "Selected Keywords..."
-        ? userInput
-        : `Combine the ${keywords} to create a scenario for why do need to take the day off. Do not include quotation marks.`,
-      75,
-      generateExcuse,
-    );
-  
-    const imageStyle = `The image should be taken as a very quick selfie based on the ${description}. It might look a bit blurred.`;
+    // Check if it's the first time the function is called
+    const isFirstTime = messageHistory.length === 0;
 
-    const imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
-
-    setMessage("Sent");
+    const description = isFirstTime
+    ? await getGroqCompletion(
+        keywords === "Selected Keywords..."
+          ? userInput
+          : `Combine the ${keywords} to create a scenario for why do need to take the day off. Do not include quotation marks.`,
+        75,
+        generateExcuse,
+      )
+    : await getGroqCompletion(
+      `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. Do not include quotation marks. The response should be no longer than 20 words.`,
+      40,
+      );
 
     const critique = await getGroqCompletion(
-      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Limit your response to under 50 words.`,
-      100,
+      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Limit your response to under 30 words.`,
+      75,
     );
 
     setIsTyping(true); // Set isTyping to true before generating the image
@@ -144,14 +151,38 @@ export default function UnderTheWeatherPage() {
 
     const newExcuse = {
       description,
-      imageUrl,
+      imageUrl: "",
       critique: "", // Initialize critique as an empty string
       score: newScore.toString(),
     };
   
     // Add the new excuse to the message history
-    setMessageHistory((prevHistory) => [...prevHistory, newExcuse,]);
+    setMessageHistory((prevHistory) => [...prevHistory, newExcuse]);
+
+    await generateTags(critique);
   }
+
+  const handleImageGeneration = async () => {
+    const lastExcuse = messageHistory[messageHistory.length - 1];
+    const prompt = `Generate an image based on the following scenario: ${lastExcuse.description}. The critique from the boss is "${lastExcuse.critique}". The image should be a selfie depicting the scenario.`;
+    const imageStyle = `The image should be taken as a very quick selfie based on the ${lastExcuse.description}. It might look a bit blurred.`;
+  
+    const imageUrl = await generateImageFal(`${prompt} ${imageStyle}`, "landscape_16_9");
+  
+    const newCritique = await getGroqCompletion(
+      `You are the employer, give a response based on the following image: ${imageUrl}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Limit your response to under 50 words.`,
+      100,
+    );
+  
+    const newExcuse = {
+      description: lastExcuse.description,
+      imageUrl,
+      critique: newCritique,
+      score: lastExcuse.score,
+    };
+  
+    setMessageHistory((prevHistory) => [...prevHistory.slice(0, -1), newExcuse]);
+  };
 
   // Function to toggle audio
   const toggleAudio = () => {
@@ -201,9 +232,15 @@ export default function UnderTheWeatherPage() {
               placeholder="Say something quick..."
               className="ml-3 mt-6 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-3"
             />
+                <button
+                  className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3"
+                  onClick={handleImageGeneration}
+                >
+                  Photo
+                </button>
             <button
               className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3"
-              onClick={generateTags}>
+              onClick={() => generateTags()}>
               Generate
             </button>
             <button
