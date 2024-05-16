@@ -7,6 +7,7 @@ import ImageGallery from "@/components/ImageGallery";
 import { getGroqCompletion } from "@/ai/groq";
 import { generateImageFal } from "@/ai/fal";
 import Link from "next/link";
+import IncomingCallPopup from "@/components/IncomingCallPopup"; // Import the new popup component
 
 type Excuse = {
   description: string;
@@ -28,7 +29,27 @@ export default function UnderTheWeatherPage() {
   const [remainingTime, setRemainingTime] = useState(30);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [gameEndCount, setGameEndCount] = useState(0); // State variable to track the number of times the game has ended
+  const [jobTitle, setJobTitle] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [showPopup, setShowPopup] = useState(false); // New state for popup visibility
+
   
+
+  useEffect(() => {
+    const generateJobTitle = async () => {
+      const generatedText = await getGroqCompletion("Generate a job title. Do not include any other comments. Limit to 3 words", 15);
+      setJobTitle(generatedText);
+    };
+
+    const generateSkills = async () => {
+      const generatedSkills = await getGroqCompletion(
+        `Generate 3 comma separated words of skills based on ${skills}. `,
+        15);
+        setSkills(generatedSkills.split(',').map(skill => skill.trim()));
+      };
+    generateJobTitle();
+    generateSkills();
+  }, []);
 
   useEffect(() => {
     // Start the 15-second timer when the component mounts
@@ -54,6 +75,9 @@ export default function UnderTheWeatherPage() {
     // When remaining time reaches 0, trigger the action
     if (remainingTime === 0) {
       generateBossTimerResponse();
+    }
+    if (remainingTime === 0) {
+      setShowPopup(true); // Show the popup when the timer reaches 10 seconds
     }
   }, [remainingTime]);
 
@@ -175,6 +199,18 @@ export default function UnderTheWeatherPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-sky-300 font-mono text-sm">
+    {/* Render IncomingCallPopup if showPopup is true */}
+    {showPopup && <IncomingCallPopup onClose={() => setShowPopup(false)} />}
+
+    <div id="Job" className="p-2 text-center bg-white p-2 rounded-lg mb-4">
+      <div>
+        Job Title: <span className="font-bold">{jobTitle}</span>
+      </div>
+      <div>
+        Skills: <span className="font-bold">{skills}</span>
+      </div>
+    </div>
+
       <div
         id="phoneBorder"
         className="w-3/4 md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative" 
@@ -182,8 +218,8 @@ export default function UnderTheWeatherPage() {
         <div className="w-full flex flex-col bg-white">
           <div
             id="messageHistory"
-            className="lg:w-3/5"
-          >
+            className="lg:w-3/5 h-96 overflow-y-auto" // Add fixed height and overflow properties
+            >
             {messageHistory.map((message, index) => (
               <div
                 key={index}

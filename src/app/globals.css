@@ -33,3 +33,13 @@ body {
   padding: 8px;
   border-radius: 4px;
 }
+
+#messageHistory {
+  height: 24rem; /* Equivalent to h-96 in Tailwind CSS */
+  overflow-y: auto;
+}
+
+#messageHistory::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

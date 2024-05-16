@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@deepgram/sdk": "^3.3.2",
+    "@fal-ai/serverless-client": "^0.10.0",
     "@types/react-dnd": "^3.0.2",
     "groq-sdk": "^0.3.2",
     "install": "^0.13.0",
