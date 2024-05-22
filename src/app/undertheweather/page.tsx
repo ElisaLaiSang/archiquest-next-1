@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { employerResponse, generateTagsPrompt, generateExcuse } from "@/ai/prompts";
 import TagCloud from "@/components/TagCloud";
-import ImageGallery from "@/components/ImageGallery";
 import { getGroqCompletion } from "@/ai/groq";
 import { generateImageFal } from "@/ai/fal";
 import Link from "next/link";
@@ -30,6 +29,7 @@ export default function UnderTheWeatherPage() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [gameEndCount, setGameEndCount] = useState(0); // State variable to track the number of times the game has ended
   const [showPopup, setShowPopup] = useState(false); // New state for popup visibility
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
     // Start the 15-second timer when the component mounts
@@ -168,6 +168,8 @@ export default function UnderTheWeatherPage() {
   
       if (imageStyle !== "") {
         imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
+        // Store generated image URL
+        setImageUrls(prevUrls => [...prevUrls, imageUrl]);
       }
     }
   
@@ -190,10 +192,10 @@ export default function UnderTheWeatherPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-sky-300 font-mono text-sm">
+    <main className="flex min-h-screen items-center justify-between p-24 bg-sky-300 font-mono text-sm" style={{height: "600px"}}>
     {/* Render IncomingCallPopup if showPopup is true */}
     {showPopup && <IncomingCallPopup onClose={() => setShowPopup(false)} />}
-
+    
       <div
         id="phoneBorder"
         className="w-3/4 md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative" 
@@ -274,6 +276,17 @@ export default function UnderTheWeatherPage() {
           </div>
         </div>
       </div>
+    
+      <div className="flex flex-col bg-white w-1/3 md:w-1/4 lg:w-1/4 rounded-lg items-center">
+        <p className="p-2">Photo Gallery</p>
+      <div id="imageGallery" className="grid grid-cols-3 gap-4 p-2">
+        {/* Render generated images */}
+        {imageUrls.map((url, index) => (
+          <img key={index} className="rounded-lg" src={url} alt={`Generated Image ${index}`} />
+        ))}
+      </div>
+      </div>
+
     </main>
   );
 }
