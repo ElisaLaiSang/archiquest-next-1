@@ -29,26 +29,7 @@ export default function UnderTheWeatherPage() {
   const [remainingTime, setRemainingTime] = useState(30);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [gameEndCount, setGameEndCount] = useState(0); // State variable to track the number of times the game has ended
-  const [jobTitle, setJobTitle] = useState("");
-  const [skills, setSkills] = useState<string[]>([]);
   const [showPopup, setShowPopup] = useState(false); // New state for popup visibility
-
-
-  useEffect(() => {
-    const generateJobTitle = async () => {
-      const generatedText = await getGroqCompletion("Generate a job title. Do not include any other comments. Limit to 3 words", 15);
-      setJobTitle(generatedText);
-    };
-
-    const generateSkills = async () => {
-      const generatedSkills = await getGroqCompletion(
-        `Generate 3 comma separated words of skills based on ${skills}. `,
-        15);
-        setSkills(generatedSkills.split(',').map(skill => skill.trim()));
-      };
-    generateJobTitle();
-    generateSkills();
-  }, []);
 
   useEffect(() => {
     // Start the 15-second timer when the component mounts
@@ -135,73 +116,70 @@ export default function UnderTheWeatherPage() {
     setTags(deselectedTags);
   
     setMessage("...");
-
+  
     setRemainingTime(30);
   
-    // Check if it's the first time the function is called
     const isFirstTime = messageHistory.length === 0;
-
+  
     const description = isFirstTime
-    ? await getGroqCompletion(
-        keywords === "Selected Keywords..."
-          ? userInput
-          : `Combine the ${keywords} to create a scenario for why do need to take the day off.`,
-        75,
-        generateExcuse,
-      )
-    : await getGroqCompletion(
-      `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. Do not include quotation marks. The response should be no longer than 20 words. Do not include any other explanation other than the excuse.`,
-      40,
-      );
-
-      const specialKeywords = ["here", "photo", "attached", "picture", "show", "proof"];
-      const containsSpecialKeywords = specialKeywords.some(keyword => description.toLowerCase().includes(keyword));
-    
-      const critiquePrompt = containsSpecialKeywords
-        ? `You are the employer, and your employee has provided you with proof. Approve of the day off but be a bit skeptical and funny. Communciation is via SMS. Limit to 30 words.`
-        : `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Communciation is via SMS. Limit to 30 words.`;
-    
-      const critique = await getGroqCompletion(critiquePrompt, 75);
-    
-    // Set the delayed critique value
-    setDelayedCritique(critique);
+      ? await getGroqCompletion(
+          keywords === "Selected Keywords..."
+            ? userInput
+            : `Combine the ${keywords} to create a scenario for why do need to take the day off. Do not include any other explanation, only the excuse.`,
+          75,
+          generateExcuse,
+        )
+      : await getGroqCompletion(
+        `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. The response should be no longer than 20 words. Do not include any other explanation other than the excuse.`,
+        40,
+        );
+  
+    const specialKeywords = ["here", "photo", "attached", "picture", "show", "proof"];
+    const containsSpecialKeywords = specialKeywords.some(keyword => description.toLowerCase().includes(keyword));
+  
+    const critiquePrompt = containsSpecialKeywords
+      ? `You are the employer, and your employee has provided you with proof. Approve of the day off but be a bit skeptical and funny. Communication is via SMS. Limit to 30 words.`
+      : `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Communication is via SMS. Limit to 30 words.`;
+  
+    const critique = await getGroqCompletion(critiquePrompt, 75);
+  
+    const isExcuseValid = (critique: string) => {
+      const validationKeywords = ['approve', 'valid', 'granted', 'accepted', 'off'];
+      return validationKeywords.some(keyword => critique.toLowerCase().includes(keyword));
+    };
+  
+    const isValid = isExcuseValid(critique);
+  
+    if (isValid) {
+      setScore(prevScore => (parseInt(prevScore) + 1).toString());
+    }
   
     setMessage("Send");
-
-    const shouldSendImage = !isFirstTime && (critique.toLowerCase().includes("proof") || critique.toLowerCase().includes("photo") || critique.toLowerCase().includes("send") || critique.toLowerCase().includes("show"));
-
+  
+    const shouldSendImage = !isFirstTime;
+  
     let imageUrl = "";
     let imageStyle = "";
   
     if (shouldSendImage) {
-      // Determine the type of proof requested based on the critique
-      if (critique.toLowerCase().includes("document") || critique.toLowerCase().includes("note")) {
-        imageStyle = `The image should be a document or official proof related to the description: ${messageHistory[messageHistory.length - 1].description}. It should look like a scanned document or official form.`;
-      } else {
-        imageStyle = `The image should be taken as a very quick selfie based on the ${messageHistory[messageHistory.length - 1].description}.`;
-      }
-      
-
-      // Generate the image if a valid image style is determined
+      imageStyle = critique.toLowerCase().includes("document") || critique.toLowerCase().includes("note")
+        ? `The image should be a document or official proof related to the description: ${messageHistory[messageHistory.length - 1].description}. It should look like a scanned document or official form.`
+        : `The image should be taken as a very quick selfie based on the ${messageHistory[messageHistory.length - 1].description}.`;
+  
       if (imageStyle !== "") {
         imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
       }
     }
-
-    const isPlausible = critique.toLowerCase().includes("valid");
-    const newScore = isPlausible ? parseInt(score) + 1 : parseInt(score);
-    setScore(newScore.toString());
-
+  
     const newExcuse = {
       description,
-      imageUrl,
-      critique: "", // Initialize critique as an empty string
-      score: newScore.toString(),
+      imageUrl: shouldSendImage ? imageUrl : "", // Only set imageUrl if shouldSendImage is true
+      critique,
+      score,
     };
   
-    // Add the new excuse to the message history
-    setMessageHistory((prevHistory) => [...prevHistory, newExcuse]);
-
+    setMessageHistory(prevHistory => [...prevHistory, newExcuse]);
+  
     await generateTags(critique);
   }
 
@@ -223,7 +201,7 @@ export default function UnderTheWeatherPage() {
         <div className="w-full flex flex-col bg-white">
           <div
             id="messageHistory"
-            className="lg:w-3/5 h-96 overflow-y-auto" // Add fixed height and overflow properties
+            className="lg:w-5/5 h-96 overflow-y-auto" // Add fixed height and overflow properties
             >
             {messageHistory.map((message, index) => (
               <div
@@ -257,12 +235,12 @@ export default function UnderTheWeatherPage() {
               className="ml-3 mt-6 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-3"
             />
             <button
-              className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3"
+              className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3 hover:shadow"
               onClick={() => generateTags()}>
               Generate
             </button>
             <button
-              className="p-2 bg-sky-500 py-2 px-6 rounded mt-6 mr-3"
+              className="p-2 bg-sky-500 py-2 px-6 rounded mt-6 mr-3 hover:shadow"
               onClick={handleCreate}
               disabled={keywords === "Selected Keywords..." && userInput.trim() === ""}
             >
@@ -291,7 +269,7 @@ export default function UnderTheWeatherPage() {
             </div>
 
             <Link href="/">
-              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Restart</button>
+              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Go back</button>
             </Link>
           </div>
         </div>
