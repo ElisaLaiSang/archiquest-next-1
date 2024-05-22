@@ -33,7 +33,6 @@ export default function UnderTheWeatherPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [showPopup, setShowPopup] = useState(false); // New state for popup visibility
 
-  
 
   useEffect(() => {
     const generateJobTitle = async () => {
@@ -103,7 +102,7 @@ export default function UnderTheWeatherPage() {
             return prevHistory;
           }
         });
-      }, 3000);
+      }, 1500);
 
       // Cleanup function to clear the timeout
       return () => clearTimeout(timeout);
@@ -146,38 +145,52 @@ export default function UnderTheWeatherPage() {
     ? await getGroqCompletion(
         keywords === "Selected Keywords..."
           ? userInput
-          : `Combine the ${keywords} to create a scenario for why do need to take the day off. Do not include quotation marks.`,
+          : `Combine the ${keywords} to create a scenario for why do need to take the day off.`,
         75,
         generateExcuse,
       )
     : await getGroqCompletion(
-      `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. Do not include quotation marks. The response should be no longer than 20 words.`,
+      `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. Do not include quotation marks. The response should be no longer than 20 words. Do not include any other explanation other than the excuse.`,
       40,
       );
 
-      const imageStyle = `The image should be taken as a very quick selfie based on the ${description}. It might look a bit blurred.`;
-
-      const imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
-  
-      setMessage("...");
-
-    const critique = await getGroqCompletion(
-      `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Limit your response to under 30 words. Only generate the response, do not include any other text.`,
-      75,
-    );
-
-    setIsTyping(true); // Set isTyping to true before generating the image
+      const specialKeywords = ["here", "photo", "attached", "picture", "show", "proof"];
+      const containsSpecialKeywords = specialKeywords.some(keyword => description.toLowerCase().includes(keyword));
+    
+      const critiquePrompt = containsSpecialKeywords
+        ? `You are the employer, and your employee has provided you with proof. Approve of the day off but be a bit skeptical and funny. Communciation is via SMS. Limit to 30 words.`
+        : `You are the employer, give a response based on the following description: ${description}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you get proof. Communciation is via SMS. Limit to 30 words.`;
+    
+      const critique = await getGroqCompletion(critiquePrompt, 75);
     
     // Set the delayed critique value
     setDelayedCritique(critique);
   
     setMessage("Send");
+
+    const shouldSendImage = !isFirstTime && (critique.toLowerCase().includes("proof") || critique.toLowerCase().includes("photo") || critique.toLowerCase().includes("send") || critique.toLowerCase().includes("show"));
+
+    let imageUrl = "";
+    let imageStyle = "";
   
+    if (shouldSendImage) {
+      // Determine the type of proof requested based on the critique
+      if (critique.toLowerCase().includes("document") || critique.toLowerCase().includes("note")) {
+        imageStyle = `The image should be a document or official proof related to the description: ${messageHistory[messageHistory.length - 1].description}. It should look like a scanned document or official form.`;
+      } else {
+        imageStyle = `The image should be taken as a very quick selfie based on the ${messageHistory[messageHistory.length - 1].description}.`;
+      }
+      
+
+      // Generate the image if a valid image style is determined
+      if (imageStyle !== "") {
+        imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
+      }
+    }
+
     const isPlausible = critique.toLowerCase().includes("valid");
     const newScore = isPlausible ? parseInt(score) + 1 : parseInt(score);
     setScore(newScore.toString());
-  
-    setIsTyping(false); // Set isTyping back to false after the image is generated
 
     const newExcuse = {
       description,
@@ -192,6 +205,7 @@ export default function UnderTheWeatherPage() {
     await generateTags(critique);
   }
 
+  
   // Function to toggle audio
   const toggleAudio = () => {
     setIsPlaying(!isPlaying);
@@ -201,15 +215,6 @@ export default function UnderTheWeatherPage() {
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-sky-300 font-mono text-sm">
     {/* Render IncomingCallPopup if showPopup is true */}
     {showPopup && <IncomingCallPopup onClose={() => setShowPopup(false)} />}
-
-    <div id="Job" className="p-2 text-center bg-white p-2 rounded-lg mb-4">
-      <div>
-        Job Title: <span className="font-bold">{jobTitle}</span>
-      </div>
-      <div>
-        Skills: <span className="font-bold">{skills}</span>
-      </div>
-    </div>
 
       <div
         id="phoneBorder"
@@ -239,10 +244,9 @@ export default function UnderTheWeatherPage() {
         </div>
 
         <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
-          {isTyping && <div>Boss is typing...</div>}
           <p className="ml-4">Reply Time: {remainingTime} seconds</p>
         </div>
-        <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
+        <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white pb-3">
           <div className="flex w-full">
             {/* Text input for user prompt */}
             <input
@@ -287,7 +291,7 @@ export default function UnderTheWeatherPage() {
             </div>
 
             <Link href="/">
-              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Go back</button>
+              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Restart</button>
             </Link>
           </div>
         </div>
