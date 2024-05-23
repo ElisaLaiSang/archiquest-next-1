@@ -50,7 +50,7 @@ export async function getGroqCompletion(
 export async function getGroqChat(max_tokens: number, messages: Message[]) {
   const completion = await groq.chat.completions.create({
     messages: messages,
-    model: "llama3-8b-8192",
+    model: "mixtral-8x7b-32768",
     max_tokens: max_tokens,
   });
   return (

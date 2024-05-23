@@ -29,8 +29,8 @@ function Clock() {
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cover bg-center bg-sky-300">
-      <div id="phoneBorder" className="w-3/4 md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative" style={{ height: '45vw', backgroundImage: `url('/startPageImage.png')` }}>
+    <main className="flex flex-col min-h-screen items-center justify-center bg-cover bg-center p-5 bg-sky-300">
+      <div id="phoneBorder" className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative h-[75vh] lg:h-[85vh] bg-cover lg:bg-contain" style={{backgroundImage: `url('/startPageImage.png')` }}>
         <Clock/>
           <div className="flex flex-col items-center">
             <p className="text-white text-2xl font-mono">Boss Gwyllim</p>

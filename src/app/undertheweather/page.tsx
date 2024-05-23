@@ -18,10 +18,10 @@ export type Excuse = {
 export default function UnderTheWeatherPage() {
   const [keywords, setKeywords] = useState<string>("Selected Keywords...");
   const [message, setMessage] = useState<string>("Send");
+  const [generateButton, setGenerateButton] = useState<string>("Generate");
   const [score, setScore] = useState<string>("0");
   const [isTyping, setIsTyping] = useState(false);
   const [userInput, setUserInput] = useState("");
-  const [delayedCritique, setDelayedCritique] = useState<string>("");
   const [tags, setTags] = useState<{ text: string; selected: boolean }[]>([]);
   const [messageHistory, setMessageHistory] = useState<Excuse[]>([]); // New state for message history
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -68,30 +68,9 @@ export default function UnderTheWeatherPage() {
     await generateTags(generatedText);
   };
 
-  useEffect(() => {
-    // Effect for delayed critique update
-    if (delayedCritique !== "") {
-      const timeout = setTimeout(() => {
-        setMessageHistory((prevHistory) => {
-          const lastExcuse = prevHistory[prevHistory.length - 1];
-          if (lastExcuse) {
-            return [
-              ...prevHistory.slice(0, -1),
-              { ...lastExcuse, critique: delayedCritique },
-            ];
-          } else {
-            return prevHistory;
-          }
-        });
-      }, 1500);
-
-      // Cleanup function to clear the timeout
-      return () => clearTimeout(timeout);
-    }
-  }, [delayedCritique]);
-
   // Function to handle generating tags
   const generateTags = async (lastMessageDescription = "") => {
+    setGenerateButton("...");
     const prompt = lastMessageDescription
     ? `Generate 5 SMS responses following the description: "${lastMessageDescription}". The response should be from the perspective of the employee. Only generate the responses, no other explanation is required. The responses should be no longer than 5 words.`
     : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`;
@@ -107,6 +86,7 @@ export default function UnderTheWeatherPage() {
     }));
 
     setTags(tagsWithSelectedState);
+    setGenerateButton("Generate");
   };
 
   // Function to handle message creation
@@ -205,13 +185,14 @@ export default function UnderTheWeatherPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-between p-24 bg-sky-300 font-mono text-sm" style={{height: "600px"}}>
+    <main className="flex min-h-screen items-center justify-between bg-sky-300 font-mono text-sm p-5">
+    
     {/* Render IncomingCallPopup if showPopup is true */}
     {showPopup && <IncomingCallPopup messageHistory = {messageHistory} onMessage = {handleMessage} onClose={() => setShowPopup(false)} />}
     
       <div
         id="phoneBorder"
-        className="w-3/4 md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative" 
+        className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative" 
       >
         <div className="w-full flex flex-col bg-white">
           <div
@@ -252,7 +233,7 @@ export default function UnderTheWeatherPage() {
             <button
               className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3 hover:shadow"
               onClick={() => generateTags()}>
-              Generate
+              {generateButton}
             </button>
             <button
               className="p-2 bg-sky-500 py-2 px-6 rounded mt-6 mr-3 hover:shadow"
@@ -284,7 +265,7 @@ export default function UnderTheWeatherPage() {
             </div>
 
             <Link href="/">
-              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Go back</button>
+              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Restart</button>
             </Link>
           </div>
         </div>
