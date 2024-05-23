@@ -24,6 +24,8 @@ const handleTranscription = (transcription: string) => {
   //do whatever you want here
   setTranscription(transcription);
   onMessage(speakerText, transcription);
+  getText();
+
 };
 
   useEffect(() => {
@@ -38,29 +40,10 @@ const handleTranscription = (transcription: string) => {
     };
   }, []);
 
-  useEffect( () => {
-    if (isAccepted) {
-      // Start the call timer
-      const getText = async () => {
-        const text = await getGroqCompletion(`You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`, 50 );
-        setSpeakerText(text);
-    }
-
-      const timer = setInterval(() => {
-        setCallDuration((prevDuration) => prevDuration + 1);
-      }, 1000);
-
-      const speechTimer = setInterval(() => {
-        getText();
-      }, 15000);
-      
-      return () => {
-        clearInterval(timer);
-        clearInterval(speechTimer);
-
-      };
-    }
-  }, [isAccepted, transcription, messageHistory]);
+  const getText = async () => {
+    const text = await getGroqCompletion(`You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`, 50 );
+    setSpeakerText(text);
+}
 
   const handleAccept = () => {
     setIsAccepted(true);
@@ -68,6 +51,9 @@ const handleTranscription = (transcription: string) => {
     const ringtoneElement = document.getElementById("ringtone") as HTMLAudioElement;
     ringtoneElement.pause();
     ringtoneElement.currentTime = 0;
+
+    //immediately generate some speaker text 
+     getText();
   };
 
   const formatTime = (seconds: number): string => {
