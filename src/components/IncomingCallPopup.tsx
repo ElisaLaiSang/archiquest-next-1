@@ -1,15 +1,31 @@
 import { getGroqCompletion } from "@/ai/groq";
 import React, { useState, useEffect } from "react";
 import TextToSpeech from "./TextToSpeech";
+import SpeechToText from "./SpeechToText";
+import * as fal from "@fal-ai/serverless-client";
+import { Excuse } from "@/app/undertheweather/page";
+
 
 interface IncomingCallPopupProps {
+  messageHistory:Excuse[];
   onClose: () => void; // Specify the type for onClose prop
+ onMessage:(critique:string, description:string) =>void;
 }
 
-const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({ onClose }) => {
+
+
+const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({messageHistory, onClose, onMessage }) => {
   const [isAccepted, setIsAccepted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [speakerText, setSpeakerText] = useState("");
+  const [transcription, setTranscription] = useState("");
+  
+const handleTranscription = (transcription: string) => {
+  //do whatever you want here
+  setTranscription(transcription);
+  onMessage(speakerText, transcription);
+};
+
   useEffect(() => {
     // Play the ringtone when the component mounts
     const ringtoneElement = document.getElementById("ringtone") as HTMLAudioElement;
@@ -26,7 +42,7 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({ onClose }) => {
     if (isAccepted) {
       // Start the call timer
       const getText = async () => {
-        const text = await getGroqCompletion(`Pretend you are calling an employee who has not showed up for work. You have been on the call for ${callDuration} seconds, and should get more and more irate as the call goes on.`, 32);
+        const text = await getGroqCompletion(`You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`, 50 );
         setSpeakerText(text);
     }
 
@@ -36,23 +52,15 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({ onClose }) => {
 
       const speechTimer = setInterval(() => {
         getText();
-      }, 8000);
+      }, 15000);
       
-
-      // Play the call audio when the call is accepted
-     // const callAudioElement = document.getElementById("callAudio") as HTMLAudioElement;
-     // callAudioElement.play();
-        
-        
-      // Cleanup function to clear the timer and stop the call audio
       return () => {
         clearInterval(timer);
         clearInterval(speechTimer);
-        //callAudioElement.pause();
-        //callAudioElement.currentTime = 0; // Reset the audio playback to the beginning
+
       };
     }
-  }, [isAccepted]);
+  }, [isAccepted, transcription, messageHistory]);
 
   const handleAccept = () => {
     setIsAccepted(true);
@@ -70,6 +78,8 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({ onClose }) => {
     return `${formattedMinutes}:${formattedSeconds}`;
   };
 
+  
+
   return (
     <div className="fixed bottom-0 right-0 m-8">
       <audio id="ringtone" loop>
@@ -84,13 +94,9 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({ onClose }) => {
         <div className="bg-white p-4 rounded-lg shadow-lg text-center h-64">
           <h2 className="text-xl font-bold mb-2">In Call</h2>
           <p className="text-gray-600 mb-2">Call Duration: {formatTime(callDuration)}</p>
-          <div className="grid grid-cols-3 gap-4">
-            <button className="rounded-full bg-gray-300 p-2">Mute</button>
-            <button className="rounded-full bg-gray-300 p-2">Keypad</button>
-            <button className="rounded-full bg-gray-300 p-2">Audio</button>
-            <button className="rounded-full bg-gray-300 p-2">Add Call</button>
-            <button className="rounded-full bg-gray-300 p-2">FaceTime</button>
-            <button className="rounded-full bg-gray-300 p-2">Contacts</button>
+          <div className="flex justify-center mt-4">
+          <SpeechToText onTranscribed={handleTranscription}/>
+
           </div>
           <TextToSpeech text = {speakerText} showControls={false} autoPlay/>
           <div className="flex justify-center mt-4">

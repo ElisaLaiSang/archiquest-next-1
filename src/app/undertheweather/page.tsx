@@ -8,7 +8,7 @@ import { generateImageFal } from "@/ai/fal";
 import Link from "next/link";
 import IncomingCallPopup from "@/components/IncomingCallPopup"; // Import the new popup component
 
-type Excuse = {
+export type Excuse = {
   description: string;
   imageUrl: string;
   critique: string;
@@ -191,10 +191,23 @@ export default function UnderTheWeatherPage() {
     setIsPlaying(!isPlaying);
   };
 
+  const handleMessage = (critique:string, description:string)=>{
+
+    const newExcuse = {
+      description,
+      imageUrl:  "", // Only set imageUrl if shouldSendImage is true
+      critique,
+      score,
+    };
+  
+    setMessageHistory(prevHistory => [...prevHistory, newExcuse]);
+
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-between p-24 bg-sky-300 font-mono text-sm" style={{height: "600px"}}>
     {/* Render IncomingCallPopup if showPopup is true */}
-    {showPopup && <IncomingCallPopup onClose={() => setShowPopup(false)} />}
+    {showPopup && <IncomingCallPopup messageHistory = {messageHistory} onMessage = {handleMessage} onClose={() => setShowPopup(false)} />}
     
       <div
         id="phoneBorder"

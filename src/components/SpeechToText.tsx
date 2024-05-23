@@ -1,98 +1,74 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import * as fal from "@fal-ai/serverless-client"; 
+import React, { useState, useRef, useEffect } from "react";
+import * as fal from "@fal-ai/serverless-client";
+import Spinner from "./Spinner";
 
 fal.config({
   proxyUrl: "/api/fal/proxy",
 });
 
-export default function SpeechToText() {
-  const [audioURL, setAudioURL] = useState("");
+export default function SpeechToText({
+  onTranscribed,
+}: {
+  onTranscribed?: (transcription: string) => void;
+}) {
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
-  const [transcription, setTranscription] = useState("");
-  const [blob, setBlob] = useState<Blob | null>(null);
-  useEffect(() => {
-    // Prompt the user for permission to use the mic
-    async function enableStream() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        const recorder = new MediaRecorder(stream);
-        setMediaRecorder(recorder);
-      } catch (err) {
-        console.error("Error accessing microphone:", err);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcription, setTranscription] = useState<string>("");
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorderRef.current = new MediaRecorder(stream);
+
+    mediaRecorderRef.current.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunksRef.current.push(event.data);
       }
-    }
-
-    enableStream();
-
-    // Cleanup function to stop the media stream
-    return () => {
-      mediaRecorder &&
-        mediaRecorder.stream.getTracks().forEach((track) => track.stop());
     };
-  }, []);
 
-  const startRecording = () => {
-    if (mediaRecorder) {
-      setIsRecording(true);
-      mediaRecorder.start();
-      mediaRecorder.ondataavailable = handleDataAvailable;
-      mediaRecorder.onstop = handleStop;
-    }
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      audioChunksRef.current = [];
+      if (!audioBlob) return;
+      setIsTranscribing(true);
+      const dataURI = await convertBlobToBase64(audioBlob);
+      const transcribeAudio = (await fal.run("fal-ai/whisper", {
+        input: {
+          audio_url: dataURI,
+        },
+      })) as any;
+      console.log(transcribeAudio);
+      setTranscription(transcribeAudio.text);
+      onTranscribed?.(transcribeAudio.text);
+      setIsTranscribing(false);
+    };
+
+    mediaRecorderRef.current.start();
+    setIsRecording(true);
   };
 
   const stopRecording = async () => {
-    mediaRecorder && mediaRecorder.stop();
+    mediaRecorderRef?.current?.stop();
     setIsRecording(false);
-    if (!blob) return;
-    console.log("converting blob to uri");
-    const dataURI = await convertBlobToBase64(blob);
-    console.log("got uri, getting transcription");
-    const transcribeAudio = (await fal.run("fal-ai/whisper", {
-      input: {
-        audio_url: dataURI,
-      },
-    })) as any;
-    console.log(transcribeAudio);
-    setTranscription(transcribeAudio.text);
   };
 
-  const handleDataAvailable = async (event: BlobEvent) => {
-    if (event.data.size > 0) {
-      const audioBlob = new Blob([event.data], { type: "audio/wav" });
-      const url = URL.createObjectURL(audioBlob);
-      setBlob(audioBlob);
-      setAudioURL(url);
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
-  };
-
-  const handleStop = async () => {
-    mediaRecorder?.stream.getTracks().forEach((track) => track.stop()); // Stop the track to release the microphone
   };
 
   return (
     <div className="p-4 w-full flex flex-col gap-4">
-      <button
-        className="bg-white p-2 rounded"
-        onClick={startRecording}
-        disabled={isRecording}
-      >
-        Start Recording
+      <button className="bg-white p-2 rounded" onClick={toggleRecording}>
+        {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
-      <button
-        className="bg-white p-2 rounded"
-        onClick={stopRecording}
-        disabled={!isRecording}
-      >
-        Stop Recording
-      </button>
-      <span>{transcription}</span>
-      <audio src={audioURL} controls />
+      {isRecording && <Spinner />}
+      <span>{isTranscribing ? "Transcribing..." : transcription}</span>
     </div>
   );
 }
