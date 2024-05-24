@@ -62,17 +62,17 @@ export default function UnderTheWeatherPage() {
   }, [remainingTime]);
 
   const generateBossTimerResponse = async () => {
-    const generatedText = await getGroqCompletion("You are the employer and your employee is taking a while to reply to your message. Create a response questioning why they are taking so long. Sassy but professional. Make the message short and limited to 10 words. This communication is via SMS", 25);
+    const generatedText = await getGroqCompletion(`You are the employer and your employee is taking a while to reply to your message. Based on the "${messageHistory}", question why they are taking so long. Be sassy and funny but professional. Make the message short and limited to 10 words. This communication is via SMS. do not include any other explanation.`, 25);
     setMessageHistory(prevHistory => [...prevHistory, { description: generatedText, imageUrl: "", critique: "", score: "" }]);
 
     await generateTags(generatedText);
   };
 
   // Function to handle generating tags
-  const generateTags = async (lastMessageDescription = "") => {
+  const generateTags = async (messageHistory = "") => {
     setGenerateButton("...");
-    const prompt = lastMessageDescription
-    ? `Generate 5 SMS responses following the description: "${lastMessageDescription}". The response should be from the perspective of the employee. Only generate the responses, no other explanation is required. The responses should be no longer than 5 words.`
+    const prompt = messageHistory
+    ? `Generate 5 SMS responses following the description: "${messageHistory}". The response should be from the perspective of the employee. Only generate the responses, no other explanation is required. The responses should be no longer than 5 words.`
     : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`;
     const tagString = await getGroqCompletion(
       prompt, 100, generateTagsPrompt);
@@ -110,7 +110,7 @@ export default function UnderTheWeatherPage() {
           generateExcuse,
         )
       : await getGroqCompletion(
-        `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. The response should be no longer than 20 words. Do not include any other explanation other than the excuse.`,
+        `Use the previous excuse "${messageHistory[messageHistory.length - 1].description}", the critique "${messageHistory[messageHistory.length - 1].critique}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. The response should be short.`,
         40,
         );
   
@@ -185,16 +185,16 @@ export default function UnderTheWeatherPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-between bg-sky-300 font-mono text-sm p-5">
+    <main className="flex flex-col min-h-screen items-center justify-center bg-sky-300 font-mono text-xs lg:text-sm p-5">
     
     {/* Render IncomingCallPopup if showPopup is true */}
     {showPopup && <IncomingCallPopup messageHistory = {messageHistory} onMessage = {handleMessage} onClose={() => setShowPopup(false)} />}
     
       <div
         id="phoneBorder"
-        className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative" 
+        className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center" 
       >
-        <div className="w-full flex flex-col bg-white">
+        <div className="w-full flex flex-col bg-white justify-between">
           <div
             id="messageHistory"
             className="lg:w-5/5 h-96 overflow-y-auto" // Add fixed height and overflow properties
@@ -220,23 +220,23 @@ export default function UnderTheWeatherPage() {
         <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
           <p className="ml-4">Reply Time: {remainingTime} seconds</p>
         </div>
-        <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white pb-3">
-          <div className="flex w-full">
+        <div className="z-10 max-w-3xl w-full bg-white pb-3">
+          <div className="flex w-full flex-wrap mt-3">
             {/* Text input for user prompt */}
             <input
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Say something quick..."
-              className="ml-3 mt-6 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-3"
+              className="ml-3 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-2"
             />
             <button
-              className="p-2 bg-gray-300 py-2 px-6 rounded mt-6 mr-3 hover:shadow"
+              className="py-2 bg-gray-300 px-2 rounded mr-2 hover:shadow"
               onClick={() => generateTags()}>
               {generateButton}
             </button>
             <button
-              className="p-2 bg-sky-500 py-2 px-6 rounded mt-6 mr-3 hover:shadow"
+              className="p-2 bg-sky-500 px-2 rounded mr-3 hover:shadow"
               onClick={handleCreate}
               disabled={keywords === "Selected Keywords..." && userInput.trim() === ""}
             >
@@ -245,6 +245,7 @@ export default function UnderTheWeatherPage() {
           </div>
         </div>
 
+        
        <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
           {tags.length > 0 && (
           <TagCloud
@@ -270,17 +271,6 @@ export default function UnderTheWeatherPage() {
           </div>
         </div>
       </div>
-    
-      <div className="flex flex-col bg-white w-1/3 md:w-1/4 lg:w-1/4 rounded-lg items-center">
-        <p className="p-2">Photo Gallery</p>
-      <div id="imageGallery" className="grid grid-cols-3 gap-4 p-2">
-        {/* Render generated images */}
-        {imageUrls.map((url, index) => (
-          <img key={index} className="rounded-lg" src={url} alt={`Generated Image ${index}`} />
-        ))}
-      </div>
-      </div>
-
     </main>
   );
 }

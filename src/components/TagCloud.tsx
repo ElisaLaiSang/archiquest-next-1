@@ -27,14 +27,14 @@ export default function TagCloud({
 
   // Render the provided tags
   return (
-    <div className="flex justify-between w-full flex-wrap">
+    <div className="flex w-full flex-wrap md:text-sm lg:text-sm my-2 ml-2 mr-2" style={{ fontSize: '0.7rem' }}>
       {tags.map((t, i) => (
         <button
           key={i}
           onClick={() => handleTagSelect(i)}
           className={`rounded-lg ${
             t.selected ? "bg-slate-500" : "bg-gray-200"
-          } p-2 hover:shadow m-3`}
+          } p-1.5 hover:shadow mx-1 my-1`}
         >
           {t.text}
         </button>

@@ -30,14 +30,14 @@ function Clock() {
 export default function Home() {
   return (
     <main className="flex flex-col min-h-screen items-center justify-center bg-cover bg-center p-5 md:p-5 lg:p-5 bg-sky-300">
-      <div id="phoneBorder" className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative h-[75vh] lg:h-[85vh] bg-cover lg:bg-contain" style={{backgroundImage: `url('/startPageImage.png')`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat'  }}>
+      <div id="phoneBorder" className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative h-[85vh] lg:h-[85vh] bg-cover lg:bg-contain" style={{backgroundImage: `url('/startPageImage.png')`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat'  }}>
         <Clock/>
         <div className="flex flex-col font-mono text-xs md:text-sm lg:text-sm text-white bg-zinc-800 bg-opacity-65 rounded-lg p-2 m-4 mb-10">
           <p className="font-bold">Goal:</p>
           <p>Successfully convince your boss that you need the day off work</p>
             <div className="pt-4 pb-4">
               <p>1. Press the generate button to view possible excuses you can use.</p>
-              <p>2. Select an excuse or type in your own and SEND.</p>
+              <p>2. Select one or more tags to create an excuse or type in your own and SEND.</p>
               <p>3. Continue the conversation.</p>
             </div>
           <p>Best of luck!</p>
