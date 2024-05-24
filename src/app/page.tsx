@@ -21,7 +21,7 @@ function Clock() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   return (
-    <div className="font-mono p-10 text-5xl font-bold text-white">
+    <div className="font-mono p-4 md:p-10 text-3xl lg:text-5xl font-bold text-white">
       {formattedTime}
     </div>
   );
@@ -29,15 +29,24 @@ function Clock() {
 
 export default function Home() {
   return (
-    <main className="flex flex-col min-h-screen items-center justify-center bg-cover bg-center p-5 bg-sky-300">
-      <div id="phoneBorder" className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative h-[75vh] lg:h-[85vh] bg-cover lg:bg-contain" style={{backgroundImage: `url('/startPageImage.png')` }}>
+    <main className="flex flex-col min-h-screen items-center justify-center bg-cover bg-center p-5 md:p-5 lg:p-5 bg-sky-300">
+      <div id="phoneBorder" className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center justify-between relative h-[75vh] lg:h-[85vh] bg-cover lg:bg-contain" style={{backgroundImage: `url('/startPageImage.png')`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat'  }}>
         <Clock/>
-          <div className="flex flex-col items-center">
-            <p className="text-white text-2xl font-mono">Boss Gwyllim</p>
-            <p className="text-white text-l italic font-mono">...</p>
+        <div className="flex flex-col font-mono text-xs md:text-sm lg:text-sm text-white bg-zinc-800 bg-opacity-65 rounded-lg p-2 m-4 mb-10">
+          <p className="font-bold">Goal:</p>
+          <p>Successfully convince your boss that you need the day off work</p>
+            <div className="pt-4 pb-4">
+              <p>1. Press the generate button to view possible excuses you can use.</p>
+              <p>2. Select an excuse or type in your own and SEND.</p>
+              <p>3. Continue the conversation.</p>
+            </div>
+          <p>Best of luck!</p>
+        </div>
+          <div className="flex flex-col items-center mb-5">
+            <p className="text-white text-xl lg:text-2xl font-mono">Boss Calling...</p>
           </div>
-          <Link href="/undertheweather" className="mb-10">
-            <button className="w-16 h-16 rounded-full bg-red-500 text-white font-mono text-sm">
+          <Link href="/undertheweather" className="">
+            <button className="w-12 h-12 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16  rounded-full bg-red-500 text-white font-mono text-xs sm:text-sm md:text-base lg:text-l">
               START
             </button>
           </Link>
