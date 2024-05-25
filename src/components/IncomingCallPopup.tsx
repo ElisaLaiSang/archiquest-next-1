@@ -9,7 +9,7 @@ import { Excuse } from "@/app/undertheweather/page";
 interface IncomingCallPopupProps {
   messageHistory:Excuse[];
   onClose: () => void; // Specify the type for onClose prop
- onMessage:(critique:string, description:string) =>void;
+  onMessage:(bossMessage:string, employeeMessage:string) =>void;
 }
 
 
@@ -67,7 +67,7 @@ const handleTranscription = (transcription: string) => {
   
 
   return (
-    <div className="fixed bottom-0 right-0 m-8">
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <audio id="ringtone" loop>
         <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_f3ad5c138e.mp3" type="audio/mpeg" />
         Your browser does not support the audio element.
@@ -97,7 +97,7 @@ const handleTranscription = (transcription: string) => {
       ) : (
         <div className="bg-white p-4 rounded-lg shadow-lg text-center">
           <h2 className="text-xl font-bold mb-2">Incoming Call</h2>
-          <p className="text-gray-600 mb-4">From: Boss Gwyy</p>
+          <p className="text-gray-600 mb-4">From: Boss</p>
           <div className="flex justify-around">
             <button
               className="bg-green-500 text-white py-2 px-4 rounded-full"
