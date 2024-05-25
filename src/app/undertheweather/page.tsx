@@ -32,17 +32,6 @@ export default function UnderTheWeatherPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [bossTimerMessage, setBossTimerMessage] = useState('');
 
-  // Initialize the audioRef with an instance of the Audio object
-  const audioRef = useRef(new Audio('https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3'));
-
-  useEffect(() => {
-    if (showPopup) {
-      audioRef.current.pause(); // Pause the audio when the popup is shown
-    } else {``
-      audioRef.current.play(); // Resume the audio when the popup is closed
-    }
-  }, [showPopup]);
-
   useEffect(() => {
     // Start the 15-second timer when the component mounts
     const bossTimer = setInterval(() => {
@@ -272,7 +261,7 @@ export default function UnderTheWeatherPage() {
        </div>
 
         <div className="flex justify-between w-full items-center">
-          <audio className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay ref={audioRef}/>
+        <audio className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay />
 
           <div className="flex justify-between">
             <div className="flex flex-col">
