@@ -25,12 +25,40 @@ export default function UnderTheWeatherPage() {
   const [tags, setTags] = useState<{ text: string; selected: boolean }[]>([]);
   const [messageHistory, setMessageHistory] = useState<Excuse[]>([]); // New state for message history
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [bossResponseTimer, setBossResponseTimer] = useState(30);
+  const [bossResponseTimer, setBossResponseTimer] = useState(20);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [gameEndCount, setGameEndCount] = useState(0); // State variable to track the number of times the game has ended
   const [showPopup, setShowPopup] = useState(false); // New state for popup visibility
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [bossTimerMessage, setBossTimerMessage] = useState('');
+  const [popupCallTimer, setPopupCallTimer] = useState(0);
+  const [isPopupCallTimerRunning, setIsPopupCallTimerRunning] = useState(false);
+  const [isComponentMounted, setIsComponentMounted] = useState(false);
+  
+  const resetTimer = () => {
+    setIsPopupCallTimerRunning(false);
+    setShowPopup(false);
+    setIsComponentMounted(false);
+    setBossResponseTimer(20);
+  };
+  
+  useEffect(() => {
+    const startPopupCallTimer = () => {
+      const randomDelay = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
+      setPopupCallTimer(randomDelay);
+      setIsPopupCallTimerRunning(true);
+      setIsComponentMounted(true);
+  
+      const callTimer = setTimeout(() => {
+        setShowPopup(true);
+        setIsPopupCallTimerRunning(false);
+      }, randomDelay * 1000);
+  
+      return () => clearTimeout(callTimer);
+    };
+  
+    startPopupCallTimer();
+  }, []);
 
   useEffect(() => {
     // Start the 15-second timer when the component mounts
@@ -40,10 +68,10 @@ export default function UnderTheWeatherPage() {
           return prevTime - 1;
         } else {
           // Reset timer to 30 seconds
-          setBossResponseTimer(30);
+          setBossResponseTimer(20);
           // Call generateBossTimerResponse immediately after resetting the timer
           ;
-          return 30; 
+          return 20; 
         }
       });
     }, 1000); // Update every second
@@ -56,9 +84,6 @@ export default function UnderTheWeatherPage() {
     // When remaining time reaches 0, trigger the action
     if (bossResponseTimer === 0) {
       generateBossTimerResponse();
-    }
-    if (bossResponseTimer === 0) {
-      setShowPopup(true); // Show the popup when the timer reaches 10 seconds
     }
   }, [bossResponseTimer]);
 
@@ -98,13 +123,18 @@ export default function UnderTheWeatherPage() {
 
   // Function to handle message creation
   async function handleCreate() {
+    if (isPopupCallTimerRunning) {
+      setIsPopupCallTimerRunning(false);
+      setIsComponentMounted(false);
+    }
+    
     // Deselect all tags
     const deselectedTags = tags.map(tag => ({ ...tag, selected: false }));
     setTags(deselectedTags);
   
     setMessage("...");
   
-    setBossResponseTimer(30);
+    setBossResponseTimer(20);
   
     const isFirstTime = messageHistory.length === 0;
   
@@ -194,8 +224,15 @@ export default function UnderTheWeatherPage() {
   return (
     <main className="flex flex-col min-h-screen items-center justify-center bg-sky-300 font-mono text-xs lg:text-sm p-5">
     
-    {/* Render IncomingCallPopup if showPopup is true */}
-    {showPopup && <IncomingCallPopup messageHistory = {messageHistory} onMessage = {handleMessage} onClose={() => setShowPopup(false)} />}
+    {/* Render IncomingCallPopup if showPopup is true */} 
+    {showPopup && (
+      <IncomingCallPopup
+        messageHistory={messageHistory}
+        onMessage={handleMessage}
+        onClose={resetTimer}
+        setIsPopupCallTimerRunning={setIsPopupCallTimerRunning}
+      />
+    )}
     
       <div
         id="phoneBorder"
