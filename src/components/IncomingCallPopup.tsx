@@ -5,29 +5,27 @@ import SpeechToText from "./SpeechToText";
 import * as fal from "@fal-ai/serverless-client";
 import { Excuse } from "@/app/undertheweather/page";
 
+
 interface IncomingCallPopupProps {
-  messageHistory: Excuse[];
+  messageHistory:Excuse[];
   onClose: () => void; // Specify the type for onClose prop
-  onMessage: (bossMessage: string, employeeMessage: string) => void;
-  setIsPopupCallTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
+  onMessage:(bossMessage:string, employeeMessage:string) =>void;
+  setIsPopupCallTimerRunning: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
-  messageHistory,
-  onClose,
-  onMessage,
-  setIsPopupCallTimerRunning,
-}) => {
+const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({messageHistory, onClose, onMessage, setIsPopupCallTimerRunning, }) => {
   const [isAccepted, setIsAccepted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [speakerText, setSpeakerText] = useState("");
   const [transcription, setTranscription] = useState("");
+  
+const handleTranscription = (transcription: string) => {
+  //do whatever you want here
+  setTranscription(transcription);
+  onMessage(speakerText, transcription);
+  getText();
 
-  const handleTranscription = (transcription: string) => {
-    setTranscription(transcription);
-    onMessage(speakerText, transcription);
-    getText();
-  };
+};
 
   useEffect(() => {
     // Play the ringtone when the component mounts
@@ -42,12 +40,9 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
   }, []);
 
   const getText = async () => {
-    const text = await getGroqCompletion(
-      `You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`,
-      50
-    );
+    const text = await getGroqCompletion(`You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`, 50 );
     setSpeakerText(text);
-  };
+}
 
   const handleAccept = () => {
     setIsAccepted(true);
@@ -56,15 +51,16 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
     ringtoneElement.pause();
     ringtoneElement.currentTime = 0;
 
-    //immediately generate some speaker text
-    getText();
+    //immediately generate some speaker text 
+     getText();
   };
 
   const handleDecline = () => {
     setIsAccepted(false);
-    onClose(); // Call the onClose prop to reset the timer
+    onClose(); // Close the popup
     setIsPopupCallTimerRunning(false); // Reset the popup call timer state
   };
+  
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -74,20 +70,16 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
     return `${formattedMinutes}:${formattedSeconds}`;
   };
 
+  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <audio id="ringtone" loop>
-        <source
-          src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_f3ad5c138e.mp3"
-          type="audio/mpeg"
-        />
+        <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_f3ad5c138e.mp3" type="audio/mpeg" />
         Your browser does not support the audio element.
       </audio>
       <audio id="callAudio">
-        <source
-          src="https://cdn.pixabay.com/audio/2022/03/13/audio_450e1adce3.mp3"
-          type="audio/mpeg"
-        />
+        <source src="https://cdn.pixabay.com/audio/2022/03/13/audio_450e1adce3.mp3" type="audio/mpeg" />
         Your browser does not support the audio element.
       </audio>
       {isAccepted ? (
@@ -95,9 +87,10 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
           <h2 className="text-xl font-bold mb-2">In Call</h2>
           <p className="text-gray-600 mb-2">Call Duration: {formatTime(callDuration)}</p>
           <div className="flex justify-center mt-4">
-            <SpeechToText onTranscribed={handleTranscription} />
+          <SpeechToText onTranscribed={handleTranscription}/>
+
           </div>
-          <TextToSpeech text={speakerText} showControls={false} autoPlay />
+          <TextToSpeech text = {speakerText} showControls={false} autoPlay/>
           <div className="flex justify-center mt-4">
             <button
               className="bg-red-500 text-white py-2 px-4 rounded-full"
@@ -120,7 +113,10 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
             </button>
             <button
               className="bg-red-500 text-white py-2 px-4 rounded-full"
-              onClick={handleDecline}
+              onClick={() => {
+                onClose(); // Call the onClose function to close the popup
+                setIsPopupCallTimerRunning(false); // Reset the timer running state
+              }}
             >
               Decline
             </button>

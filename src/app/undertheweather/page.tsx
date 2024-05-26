@@ -33,21 +33,17 @@ export default function UnderTheWeatherPage() {
   const [bossTimerMessage, setBossTimerMessage] = useState('');
   const [popupCallTimer, setPopupCallTimer] = useState(0);
   const [isPopupCallTimerRunning, setIsPopupCallTimerRunning] = useState(false);
-  const [isComponentMounted, setIsComponentMounted] = useState(false);
   
   const resetTimer = () => {
     setIsPopupCallTimerRunning(false);
     setShowPopup(false);
-    setIsComponentMounted(false);
-    setBossResponseTimer(20);
   };
   
   useEffect(() => {
     const startPopupCallTimer = () => {
-      const randomDelay = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
+      const randomDelay = Math.floor(Math.random() * (30 - 20 + 1)) + 20;
       setPopupCallTimer(randomDelay);
       setIsPopupCallTimerRunning(true);
-      setIsComponentMounted(true);
   
       const callTimer = setTimeout(() => {
         setShowPopup(true);
@@ -123,11 +119,6 @@ export default function UnderTheWeatherPage() {
 
   // Function to handle message creation
   async function handleCreate() {
-    if (isPopupCallTimerRunning) {
-      setIsPopupCallTimerRunning(false);
-      setIsComponentMounted(false);
-    }
-    
     // Deselect all tags
     const deselectedTags = tags.map(tag => ({ ...tag, selected: false }));
     setTags(deselectedTags);
