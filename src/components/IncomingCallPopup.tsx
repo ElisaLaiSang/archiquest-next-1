@@ -1,66 +1,64 @@
-import { getGroqCompletion } from "@/ai/groq";
 import React, { useState, useEffect } from "react";
 import TextToSpeech from "./TextToSpeech";
 import SpeechToText from "./SpeechToText";
-import * as fal from "@fal-ai/serverless-client";
+import { getGroqCompletion } from "@/ai/groq";
 import { Excuse } from "@/app/undertheweather/page";
 
-
 interface IncomingCallPopupProps {
-  messageHistory:Excuse[];
-  onClose: () => void; // Specify the type for onClose prop
-  onMessage:(bossMessage:string, employeeMessage:string) =>void;
-  setIsPopupCallTimerRunning: React.Dispatch<React.SetStateAction<boolean>>
+  messageHistory: Excuse[];
+  onClose: () => void;
+  onMessage: (bossMessage: string, employeeMessage: string) => void;
+  setIsPopupCallTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({messageHistory, onClose, onMessage, setIsPopupCallTimerRunning, }) => {
+const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
+  messageHistory,
+  onClose,
+  onMessage,
+  setIsPopupCallTimerRunning,
+}) => {
   const [isAccepted, setIsAccepted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [speakerText, setSpeakerText] = useState("");
   const [transcription, setTranscription] = useState("");
-  
-const handleTranscription = (transcription: string) => {
-  //do whatever you want here
-  setTranscription(transcription);
-  onMessage(speakerText, transcription);
-  getText();
 
-};
+  const handleTranscription = (transcription: string) => {
+    setTranscription(transcription);
+    onMessage(speakerText, transcription);
+    getText(transcription);
+  };
 
   useEffect(() => {
-    // Play the ringtone when the component mounts
     const ringtoneElement = document.getElementById("ringtone") as HTMLAudioElement;
     ringtoneElement.play();
 
-    // Cleanup function to pause the ringtone when the component unmounts
     return () => {
       ringtoneElement.pause();
-      ringtoneElement.currentTime = 0; // Reset the audio playback to the beginning
+      ringtoneElement.currentTime = 0;
     };
   }, []);
 
-  const getText = async () => {
-    const text = await getGroqCompletion(`You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`, 50 );
+  const getText = async (transcription: string) => {
+    const text = await getGroqCompletion(
+      `You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`,
+      50
+    );
     setSpeakerText(text);
-}
+  };
 
   const handleAccept = () => {
     setIsAccepted(true);
-    // Stop the ringtone
     const ringtoneElement = document.getElementById("ringtone") as HTMLAudioElement;
     ringtoneElement.pause();
     ringtoneElement.currentTime = 0;
-
-    //immediately generate some speaker text 
-     getText();
+    getText(transcription);
   };
 
   const handleDecline = () => {
     setIsAccepted(false);
-    onClose(); // Close the popup
-    setIsPopupCallTimerRunning(false); // Reset the popup call timer state
+    onClose();
+    setIsPopupCallTimerRunning(false);
   };
-  
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -69,8 +67,6 @@ const handleTranscription = (transcription: string) => {
     const formattedSeconds = String(remainingSeconds).padStart(2, "0");
     return `${formattedMinutes}:${formattedSeconds}`;
   };
-
-  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -87,15 +83,11 @@ const handleTranscription = (transcription: string) => {
           <h2 className="text-xl font-bold mb-2">In Call</h2>
           <p className="text-gray-600 mb-2">Call Duration: {formatTime(callDuration)}</p>
           <div className="flex justify-center mt-4">
-          <SpeechToText onTranscribed={handleTranscription}/>
-
+            <SpeechToText onTranscribed={handleTranscription} />
           </div>
-          <TextToSpeech text = {speakerText} showControls={false} autoPlay/>
+          <TextToSpeech text={speakerText} showControls={false} autoPlay />
           <div className="flex justify-center mt-4">
-            <button
-              className="bg-red-500 text-white py-2 px-4 rounded-full"
-              onClick={onClose}
-            >
+            <button className="bg-red-500 text-white py-2 px-4 rounded-full" onClick={onClose}>
               End Call
             </button>
           </div>
@@ -105,19 +97,10 @@ const handleTranscription = (transcription: string) => {
           <h2 className="text-xl font-bold mb-2">Incoming Call</h2>
           <p className="text-gray-600 mb-4">From: Boss</p>
           <div className="flex justify-around">
-            <button
-              className="bg-green-500 text-white py-2 px-4 rounded-full"
-              onClick={handleAccept}
-            >
+            <button className="bg-green-500 text-white py-2 px-4 rounded-full" onClick={handleAccept}>
               Accept
             </button>
-            <button
-              className="bg-red-500 text-white py-2 px-4 rounded-full"
-              onClick={() => {
-                onClose(); // Call the onClose function to close the popup
-                setIsPopupCallTimerRunning(false); // Reset the timer running state
-              }}
-            >
+            <button className="bg-red-500 text-white py-2 px-4 rounded-full" onClick={handleDecline}>
               Decline
             </button>
           </div>

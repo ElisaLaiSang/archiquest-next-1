@@ -34,6 +34,7 @@ export default function UnderTheWeatherPage() {
   const [popupCallTimer, setPopupCallTimer] = useState(0);
   const [isPopupCallTimerRunning, setIsPopupCallTimerRunning] = useState(false);
   const [isGalleryVisible, setIsGalleryVisible] = useState(false);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null); // Reference for the audio element
 
@@ -47,7 +48,7 @@ export default function UnderTheWeatherPage() {
   
   useEffect(() => {
     const startPopupCallTimer = () => {
-      const randomDelay = Math.floor(Math.random() * (35 - 30 + 1)) + 30;
+      const randomDelay = Math.floor(Math.random() * (5 - 3 + 1)) + 3;
       setPopupCallTimer(randomDelay);
       setIsPopupCallTimerRunning(true);
   
@@ -66,24 +67,35 @@ export default function UnderTheWeatherPage() {
   }, []);
 
   useEffect(() => {
-    // Start the 15-second timer when the component mounts
     const bossTimer = setInterval(() => {
-      setBossResponseTimer((prevTime) => {
-        if (prevTime > 0) {
-          return prevTime - 1;
-        } else {
-          // Reset timer to 30 seconds
-          setBossResponseTimer(20);
-          // Call generateBossTimerResponse immediately after resetting the timer
-          ;
-          return 20; 
-        }
-      });
+      if (!isTimerPaused) {
+        setBossResponseTimer(prevTime => {
+          if (prevTime > 0) {
+            return prevTime - 1;
+          } else {
+            // Reset timer to 20 seconds
+            return 20;
+          }
+        });
+      }
     }, 1000); // Update every second
-  
-    // Cleanup function to clear the timer when the component unmounts or timer is reset
+
     return () => clearInterval(bossTimer);
-  }, []);
+  }, [isTimerPaused]); // Add isTimerPaused as a dependency
+
+  // New useEffect to pause the timer when the popup appears
+  useEffect(() => {
+    if (showPopup) {
+      setIsTimerPaused(true);
+    }
+  }, [showPopup]);
+
+  // New useEffect to resume the timer when the popup disappears
+  useEffect(() => {
+    if (!showPopup) {
+      setIsTimerPaused(false);
+    }
+  }, [showPopup]);
 
   useEffect(() => {
     // When remaining time reaches 0, trigger the action
