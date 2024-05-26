@@ -33,6 +33,7 @@ export default function UnderTheWeatherPage() {
   const [bossTimerMessage, setBossTimerMessage] = useState('');
   const [popupCallTimer, setPopupCallTimer] = useState(0);
   const [isPopupCallTimerRunning, setIsPopupCallTimerRunning] = useState(false);
+  const [isGalleryVisible, setIsGalleryVisible] = useState(false);
   
   const resetTimer = () => {
     setIsPopupCallTimerRunning(false);
@@ -41,7 +42,7 @@ export default function UnderTheWeatherPage() {
   
   useEffect(() => {
     const startPopupCallTimer = () => {
-      const randomDelay = Math.floor(Math.random() * (30 - 20 + 1)) + 20;
+      const randomDelay = Math.floor(Math.random() * (35 - 30 + 1)) + 30;
       setPopupCallTimer(randomDelay);
       setIsPopupCallTimerRunning(true);
   
@@ -252,14 +253,14 @@ export default function UnderTheWeatherPage() {
           <p className="ml-4">Reply Time: {bossResponseTimer} seconds</p>
         </div>
         <div className="z-10 max-w-3xl w-full bg-white pb-3">
-          <div className="flex w-full flex-wrap mt-3">
+          <div className="flex w-full mt-3">
             {/* Text input for user prompt */}
             <input
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Say something quick..."
-              className="ml-3 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-2"
+              className="ml-3 p-2 rounded-lg bg-zinc-50 border border-black flex-1 mr-2"  style={{ flex: '1 1 auto', minWidth: '0' }}
             />
             <button
               className="py-2 bg-gray-300 px-2 rounded mr-2 hover:shadow"
@@ -288,16 +289,33 @@ export default function UnderTheWeatherPage() {
           )}
        </div>
 
+      <div className="bg-white pt-2">
+       {isGalleryVisible && (
+              <>
+                <p className="flex - flex-col items-center p-2">Photo Gallery</p>
+                <div id="imageGallery" className="grid grid-cols-3 gap-4 p-2">
+                  {/* Render generated images */}
+                  {imageUrls.map((url, index) => (
+                    <img key={index} className="rounded-lg" src={url} alt={`Generated Image ${index}`} />
+                  ))}
+                </div>
+              </>
+            )}
+      </div>
+
         <div className="flex justify-between w-full items-center">
-        <audio className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay />
+        <audio className="py-2 px-2 mt-4" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay />
 
           <div className="flex justify-between">
-            <div className="flex flex-col">
-              <span className="p-2 text-white mt-4 mr-3">Day Streak: {score}</span>
-            </div>
+            <button 
+              className="p-2 bg-gray-300 px-2 rounded mr-3 hover:shadow mt-4"
+              onClick={() => setIsGalleryVisible(!isGalleryVisible)}
+            >
+              {isGalleryVisible ? 'Photos' : 'Photos'}
+            </button>
 
             <Link href="/">
-              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-6 rounded mt-4">Restart</button>
+              <button className="bg-gray-300 hover:bg-blue-700 text-black py-2 px-2 rounded mt-4">Restart</button>
             </Link>
           </div>
         </div>
