@@ -35,9 +35,14 @@ export default function UnderTheWeatherPage() {
   const [isPopupCallTimerRunning, setIsPopupCallTimerRunning] = useState(false);
   const [isGalleryVisible, setIsGalleryVisible] = useState(false);
   
+  const audioRef = useRef<HTMLAudioElement>(null); // Reference for the audio element
+
   const resetTimer = () => {
     setIsPopupCallTimerRunning(false);
     setShowPopup(false);
+    if (audioRef.current) {
+      audioRef.current.volume = 1; // Restore volume
+    }
   };
   
   useEffect(() => {
@@ -48,6 +53,9 @@ export default function UnderTheWeatherPage() {
   
       const callTimer = setTimeout(() => {
         setShowPopup(true);
+        if (audioRef.current) {
+          audioRef.current.volume = 0.02; // Reduce volume
+        }
         setIsPopupCallTimerRunning(false);
       }, randomDelay * 1000);
   
@@ -304,7 +312,7 @@ export default function UnderTheWeatherPage() {
       </div>
 
         <div className="flex justify-between w-full items-center">
-        <audio className="py-2 px-2 mt-4" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay />
+        <audio ref={audioRef} className="p-2 mt-2" src="https://cdn.pixabay.com/download/audio/2023/08/07/audio_62460cb7bb.mp3?filename=prank-161170.mp3" controls autoPlay />
 
           <div className="flex justify-between">
             <button 
