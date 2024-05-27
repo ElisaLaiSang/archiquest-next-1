@@ -48,7 +48,7 @@ export default function UnderTheWeatherPage() {
   
   useEffect(() => {
     const startPopupCallTimer = () => {
-      const randomDelay = Math.floor(Math.random() * (5 - 3 + 1)) + 3;
+      const randomDelay = Math.floor(Math.random() * (35 - 25 + 1)) + 25;
       setPopupCallTimer(randomDelay);
       setIsPopupCallTimerRunning(true);
   
@@ -120,9 +120,10 @@ export default function UnderTheWeatherPage() {
   // Function to handle generating tags
   const generateTags = async (messageHistory = "") => {
     setGenerateButton("...");
+    
     const prompt = messageHistory
-    ? `Generate 5 SMS responses following the description: "${messageHistory}". The response should be from the perspective of the employee. Only generate the responses, no other explanation is required. The responses should be no longer than 5 words.`
-    : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`;
+    ? `Generate 5 SMS responses following the description: "${messageHistory}". The response should be from the perspective of the employee. The tags should be short and brief.`
+    : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be short for example like "Cat ate my laptop" or "Got lost in space"`;
     const tagString = await getGroqCompletion(
       prompt, 100, generateTagsPrompt);
     const tagOptions = tagString.split(".");
@@ -140,6 +141,10 @@ export default function UnderTheWeatherPage() {
 
   // Function to handle message creation
   async function handleCreate() {
+    const messageHistoryString = messageHistory
+    .map(({ employeeMessage, bossMessage }) => `Employee: ${employeeMessage}\nBoss: ${bossMessage}`)
+    .join('\n\n');
+  
     // Deselect all tags
     const deselectedTags = tags.map(tag => ({ ...tag, selected: false }));
     setTags(deselectedTags);
@@ -159,7 +164,7 @@ export default function UnderTheWeatherPage() {
           generateExcuse,
         )
       : await getGroqCompletion(
-        `Use the previous excuse "${messageHistory[messageHistory.length - 1].employeeMessage}", the boss message "${messageHistory[messageHistory.length - 1].bossMessage}", and the tags "${keywords}" to generate a response to your boss' message. Keep it as a brief SMS response. The response should be short. Do not include any other explanation or instructions.`,
+        `The boss has send the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". Based on the message create a response that also incorporate the tags "${keywords}". Keep it as a brief SMS response. The response should be short. Do not include any other explanation or instructions.`,
         40,
         );
   
@@ -185,33 +190,38 @@ export default function UnderTheWeatherPage() {
   
     setMessage("Send");
   
-    const shouldSendImage = !isFirstTime;
+    const shouldSendImage = messageHistory.length > 0
+    ? await getGroqCompletion(
+      `The boss sent the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". Based on this message, is the boss asking the employee to send a photo or proof to support their excuse? Respond with "Yes" or "No" only.`,
+    2, // Set a low max_tokens value to allow only "Yes" or "No" as the response
+  )
+  : "No";
   
-    let imageUrl = "";
-    let imageStyle = "";
+  const shouldSendImageBool = shouldSendImage.trim().toLowerCase() === "yes";
   
-    if (shouldSendImage) {
-      imageStyle = bossMessage.toLowerCase().includes("document") || bossMessage.toLowerCase().includes("note")
-        ? `The image should be a document or official proof related to the description: ${messageHistory[messageHistory.length - 1].employeeMessage}. It should look like a scanned document or official form.`
-        : `The image should be taken as a very quick phone selfie based on the ${messageHistory[messageHistory.length - 1].employeeMessage}.`;
+  let imageUrl = "";
+  let imageStyle = "";
   
-      if (imageStyle !== "") {
-        imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
-        // Store generated image URL
-        setImageUrls(prevUrls => [...prevUrls, imageUrl]);
-      }
+  if (shouldSendImageBool) {
+    imageStyle = `The image should be taken as a very quick phone selfie based on the ${messageHistory[messageHistory.length - 1].employeeMessage}.`;
+  
+    if (imageStyle !== "") {
+      imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
+      // Store generated image URL
+      setImageUrls(prevUrls => [...prevUrls, imageUrl]);
     }
+  }
   
-    const newExcuse = {
-      employeeMessage,
-      imageUrl: shouldSendImage ? imageUrl : "", // Only set imageUrl if shouldSendImage is true
-      bossMessage,
-      score,
-    };
+  const newExcuse = {
+    employeeMessage,
+    imageUrl: shouldSendImageBool ? imageUrl : "",
+    bossMessage,
+    score,
+  };
   
-    setMessageHistory(prevHistory => [...prevHistory, newExcuse]);
+  setMessageHistory(prevHistory => [...prevHistory, newExcuse]);
   
-    await generateTags(bossMessage);
+  await generateTags(bossMessage);
   }
 
   
@@ -245,7 +255,10 @@ export default function UnderTheWeatherPage() {
         setIsPopupCallTimerRunning={setIsPopupCallTimerRunning}
       />
     )}
-    
+    <div className="flex flex-col">
+      <span className="p-2 text-white mt-4 mr-3">Day Streak: {score}</span>
+    </div>
+
       <div
         id="phoneBorder"
         className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center relative" 
