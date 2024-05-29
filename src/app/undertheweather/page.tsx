@@ -121,7 +121,7 @@ export default function UnderTheWeatherPage() {
   const generateTags = async (messageHistory = "") => {
     setGenerateButton("...");
     const prompt = messageHistory
-    ? `Generate 5 SMS responses following: "${messageHistory}". Generate the responses like you are the employee. Only generate the responses, no other explanation is required. The responses must be short and brief. Keep the respond to 5 words. Add a bit of humour and wittyness to the responses.`
+    ? `Generate a set of short SMS responses following: "${messageHistory}". Generate the responses like you are the employee. Only generate the responses, no other explanation is required. The responses must be short and brief. Keep the respond to five words. Add a bit of humour and wittyness to the responses.`
     : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`;
     const tagString = await getGroqCompletion(
       prompt, 100);
@@ -157,21 +157,21 @@ export default function UnderTheWeatherPage() {
     if (isFirstTime) {
       prompt = userInput.trim() !== ""
         ? `${userInput} ${keywords === "Selected Keywords..." ? "" : `Combine the ${keywords} to create a scenario for why you need to take the day off.`}`
-        : `Combine the ${keywords} to create a scenario for why you need to take the day off. Do not include any other explanation or instructions. You do not need to mention your boss' name.`;
+        : `Combine the ${keywords} to create a scenario for why you need to take the day off. Do not include any other explanation or instructions. Refer to the boss as "boss", do not use their name. You must keep the SMS to 2 sentences max. For example: "Sorry, my cat caught the flu and has made me sick. I'll have to take the day off." Do not include the word count in your response.`;
     } else {
-      prompt = `The boss has sent the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". ${userInput.trim() !== "" ? `Your response: "${userInput}". ` : ""} Based on the message, create a response that also incorporates the tags "${keywords}". Keep it as a brief SMS response. The response should be short. Do not include any other explanation or instructions.`;
+      prompt = `The boss has sent the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". ${userInput.trim() !== "" ? `Your response: "${userInput}". ` : ""} Based on the message, create a response that also incorporates the tags "${keywords}". Keep it as a brief SMS response. The response should be short. Do not include any other explanation or instructions. You must keep the SMS to one sentence. Do not include the boss' name, refer to them as "boss". Do not include the word count in your response.`;
     }
     
-    const employeeMessage = await getGroqCompletion(prompt, 75);
+    const employeeMessage = await getGroqCompletion(prompt, 50);
   
     const specialKeywords = ["here", "photo", "attached", "picture", "show", "proof"];
     const containsSpecialKeywords = specialKeywords.some(keyword => employeeMessage.toLowerCase().includes(keyword));
   
     const bossMessagePrompt = containsSpecialKeywords
       ? `You are the employer, and your employee has provided you with proof. Approve of the day off with a brief, skeptical, and funny response. Communication is via SMS, so keep your response concise. You do not need to mention the employee's name.`
-      : `You are the employer, give a response based on the following description: ${employeeMessage}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you are convinced your employee is telling the truth. Communication is via SMS, so keep your response concise and brief. Do not include any other explanation or instructions. You do not need to mention the employee's name.`;
+      : `You are the employer, give a response based on the following description: ${employeeMessage}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you are convinced your employee is telling the truth. Communication is via SMS, so keep your response concise and brief. Do not include any other explanation or instructions. You do not need to mention the employee's name. You must keep the SMS to 2 sentences max.`;
   
-    const bossMessage = await getGroqCompletion(bossMessagePrompt, 75);
+    const bossMessage = await getGroqCompletion(bossMessagePrompt, 50);
 
     const isExcuseValid = (bossMessage: string) => {
       const validationKeywords = ['approve', 'valid', 'granted', 'accepted', 'off'];
@@ -188,29 +188,31 @@ export default function UnderTheWeatherPage() {
   
     const shouldSendImage = messageHistory.length > 0
     ? await getGroqCompletion(
-      `The boss sent the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". Based on this message, is the boss asking the employee to send a photo or proof to support their excuse? Respond with "Yes" or "No" only.`,
-    2, // Set a low max_tokens value to allow only "Yes" or "No" as the response
-  )
-  : "No";
+        `The boss sent the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". Based on this message, should the employee send a selfie photo or a document/scanned note to support their excuse? Respond with either "Selfie" or "Document" only.`,
+        2, // Set a low max_tokens value to allow only "Selfie" or "Document" as the response
+      )
+    : "No";
   
-  const shouldSendImageBool = shouldSendImage.trim().toLowerCase() === "yes";
+  const imageType = shouldSendImage.trim().toLowerCase();
   
   let imageUrl = "";
   let imageStyle = "";
   
-  if (shouldSendImageBool) {
+  if (imageType === "selfie") {
     imageStyle = `The image should be taken as a very quick phone selfie based on the ${messageHistory[messageHistory.length - 1].employeeMessage}.`;
+  } else if (imageType === "document") {
+    imageStyle = `The image should be a realistic-looking doctor's note or document related to the ${messageHistory[messageHistory.length - 1].employeeMessage}.`;
+  }
   
-    if (imageStyle !== "") {
-      imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
-      // Store generated image URL
-      setImageUrls(prevUrls => [...prevUrls, imageUrl]);
-    }
+  if (imageStyle !== "") {
+    imageUrl = await generateImageFal(imageStyle, "landscape_16_9");
+    // Store generated image URL
+    setImageUrls(prevUrls => [...prevUrls, imageUrl]);
   }
   
   const newExcuse = {
     employeeMessage,
-    imageUrl: shouldSendImageBool ? imageUrl : "",
+    imageUrl: imageType === "selfie" || imageType === "document" ? imageUrl : "",
     bossMessage,
     score,
   };

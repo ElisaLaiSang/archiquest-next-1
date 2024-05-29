@@ -53,7 +53,7 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
     const text = await getGroqCompletion(
       `You are a sassy and creatively funny boss calling your employee who has not showed up for work. Based on the following description: "${transcription}"${
         messageHistoryString ? ` and the message history:\n${messageHistoryString}` : ''
-      }, provide a short, concise response. Keep your response limited to 1-2 sentences, less than 25 words. You have been on the call for ${callDuration} seconds, and you should get more irate as the call goes on. Do not include any intro, employee name, number, or tone. Do not include any actions or narrations outside of your dialogue as the boss.`,
+      }, provide a short, concise response. Keep your response limited to 1-2 sentences, similar length to this: "I can't believe you think you can just take the day off like that. We still have work to do". You have been on the call for ${callDuration} seconds, and you should get more irate as the call goes on. Do not include any intro, employee name, number, or tone. Do not include any actions or narrations outside of your dialogue as the boss.`,
       60 // You can adjust this value as needed
     );
     setSpeakerText(text);
