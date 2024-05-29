@@ -243,7 +243,9 @@ export default function UnderTheWeatherPage() {
 
   return (
     <main className="flex flex-col min-h-screen items-center justify-center bg-sky-300 font-mono text-xs lg:text-sm p-5">
-    
+            <div className="flex flex-col">
+              <span className="p-2 text-black mt-4 mr-3">Day Streak: {score}</span>
+            </div>
     {/* Render IncomingCallPopup if showPopup is true */} 
     {showPopup && (
       <IncomingCallPopup
