@@ -6,12 +6,10 @@ type Tag = {
 };
 
 export default function TagCloud({
-  prompt,
   totalTags,
   handleSelect,
   tags,
 }: {
-  prompt: string;
   totalTags: number;
   handleSelect: (selectedTags: string[]) => void;
   tags: Tag[];

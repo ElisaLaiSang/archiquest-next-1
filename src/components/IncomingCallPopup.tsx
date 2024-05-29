@@ -3,6 +3,7 @@ import TextToSpeech from "./TextToSpeech";
 import SpeechToText from "./SpeechToText";
 import { getGroqCompletion } from "@/ai/groq";
 import { Excuse } from "@/app/undertheweather/page";
+import useInterval from 'react-use/lib/useInterval';
 
 interface IncomingCallPopupProps {
   messageHistory: Excuse[];
@@ -21,6 +22,11 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
   const [callDuration, setCallDuration] = useState(0);
   const [speakerText, setSpeakerText] = useState("");
   const [transcription, setTranscription] = useState("");
+  const [isCallRunning, setIsCallRunning] = useState(false);
+
+  useInterval(() => {
+    setCallDuration((prevDuration) => prevDuration + 1);
+  }, isCallRunning ? 1000 : null);
 
   const handleTranscription = (transcription: string) => {
     setTranscription(transcription);
@@ -39,15 +45,23 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
   }, []);
 
   const getText = async (transcription: string) => {
+    const messageHistoryString = messageHistory.length > 0
+    ? messageHistory
+        .map(({ employeeMessage, bossMessage }) => `Employee: ${employeeMessage}\nBoss: ${bossMessage}`)
+        .join('\n\n')
+    : '';
     const text = await getGroqCompletion(
-      `You are a sassy and creatively funny boss calling your employee who has not showed up for work, give a response based on the following description: ${transcription}. You have been on the call for ${callDuration} seconds, and the conversation is ${messageHistory}. You should get more and more irate as the call goes on. Do not include intro;employee name,number, and your tone.`,
-      50
+      `You are a sassy and creatively funny boss calling your employee who has not showed up for work. Based on the following description: "${transcription}"${
+        messageHistoryString ? ` and the message history:\n${messageHistoryString}` : ''
+      }, provide a short, concise response. Keep your response limited to 1-2 sentences, less than 25 words. You have been on the call for ${callDuration} seconds, and you should get more irate as the call goes on. Do not include any intro, employee name, number, or tone. Do not include any actions or narrations outside of your dialogue as the boss.`,
+      60 // You can adjust this value as needed
     );
     setSpeakerText(text);
   };
 
   const handleAccept = () => {
     setIsAccepted(true);
+    setIsCallRunning(true);
     const ringtoneElement = document.getElementById("ringtone") as HTMLAudioElement;
     ringtoneElement.pause();
     ringtoneElement.currentTime = 0;
@@ -56,6 +70,7 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
 
   const handleDecline = () => {
     setIsAccepted(false);
+    setIsCallRunning(false); 
     onClose();
     setIsPopupCallTimerRunning(false);
   };

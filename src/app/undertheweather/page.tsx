@@ -42,20 +42,20 @@ export default function UnderTheWeatherPage() {
     setIsPopupCallTimerRunning(false);
     setShowPopup(false);
     if (audioRef.current) {
-      audioRef.current.volume = 1; // Restore volume
+      audioRef.current.volume = 0.5; // Restore volume
     }
   };
   
   useEffect(() => {
     const startPopupCallTimer = () => {
-      const randomDelay = Math.floor(Math.random() * (35 - 25 + 1)) + 25;
+      const randomDelay = Math.floor(Math.random() * (25 - 20 + 1)) + 20;
       setPopupCallTimer(randomDelay);
       setIsPopupCallTimerRunning(true);
   
       const callTimer = setTimeout(() => {
         setShowPopup(true);
         if (audioRef.current) {
-          audioRef.current.volume = 0.02; // Reduce volume
+          audioRef.current.volume = 0.01; // Reduce volume
         }
         setIsPopupCallTimerRunning(false);
       }, randomDelay * 1000);
@@ -104,12 +104,12 @@ export default function UnderTheWeatherPage() {
     }
   }, [bossResponseTimer]);
 
+  const messageHistoryString = messageHistory
+  .map(({ employeeMessage, bossMessage }) => `Employee: ${employeeMessage}\nBoss: ${bossMessage}`)
+  .join('\n\n');
+
   const generateBossTimerResponse = async () => {
-    const messageHistoryString = messageHistory
-      .map(({ employeeMessage, bossMessage }) => `Employee: ${employeeMessage}\nBoss: ${bossMessage}`)
-      .join('\n\n');
-  
-    const generatedText = await getGroqCompletion(`You are the employer and your employee is taking a while to reply to your message. Based on the following message history:\n\n${messageHistoryString}\n\nQuestion why they are taking so long to respond in a sassy, funny, and professional way. Make the message short and limited to 10 words. This communication is via SMS. Do not include any other explanation.`, 25);
+    const generatedText = await getGroqCompletion(`You are the employer and your employee is taking a while to reply to your message. Based on the following message history:\n\n${messageHistoryString}\n\n. Question why they are taking so long to respond in a sassy, funny, and professional way. Make the message short and limited to 10 words. This communication is via SMS. Do not include any other explanation.`, 25);
   
     setBossTimerMessage(generatedText);
     setMessageHistory(prevHistory => [...prevHistory, { employeeMessage: "", imageUrl: "", bossMessage: generatedText, score: "" }]);
@@ -120,12 +120,11 @@ export default function UnderTheWeatherPage() {
   // Function to handle generating tags
   const generateTags = async (messageHistory = "") => {
     setGenerateButton("...");
-    
     const prompt = messageHistory
-    ? `Generate 5 SMS responses following the description: "${messageHistory}". The response should be from the perspective of the employee. The tags should be short and brief.`
-    : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be short for example like "Cat ate my laptop" or "Got lost in space"`;
+    ? `Generate 5 SMS responses following: "${messageHistory}". Generate the responses like you are the employee. Only generate the responses, no other explanation is required. The responses must be short and brief. Keep the respond to 5 words. Add a bit of humour and wittyness to the responses.`
+    : `Generate only 5 excuses why you need to take the day off work. Give a mix of creative, unbelievable excuses and normal excuses. Only generate the excuses, no other explanation is required. The excuses should be no longer than 5 words.`;
     const tagString = await getGroqCompletion(
-      prompt, 100, generateTagsPrompt);
+      prompt, 100);
     const tagOptions = tagString.split(".");
     const filteredTags = tagOptions
       .map((text) => text.trim())
@@ -141,10 +140,8 @@ export default function UnderTheWeatherPage() {
 
   // Function to handle message creation
   async function handleCreate() {
-    const messageHistoryString = messageHistory
-    .map(({ employeeMessage, bossMessage }) => `Employee: ${employeeMessage}\nBoss: ${bossMessage}`)
-    .join('\n\n');
-  
+    setUserInput("");
+
     // Deselect all tags
     const deselectedTags = tags.map(tag => ({ ...tag, selected: false }));
     setTags(deselectedTags);
@@ -155,18 +152,17 @@ export default function UnderTheWeatherPage() {
   
     const isFirstTime = messageHistory.length === 0;
   
-    const employeeMessage = isFirstTime
-      ? await getGroqCompletion(
-          keywords === "Selected Keywords..."
-            ? userInput
-            : `Combine the ${keywords} to create a scenario for why do need to take the day off. Do not include any other explanation or instructions. You do not need to mention your boss' name.`,
-          75,
-          generateExcuse,
-        )
-      : await getGroqCompletion(
-        `The boss has send the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". Based on the message create a response that also incorporate the tags "${keywords}". Keep it as a brief SMS response. The response should be short. Do not include any other explanation or instructions.`,
-        40,
-        );
+    let prompt;
+
+    if (isFirstTime) {
+      prompt = userInput.trim() !== ""
+        ? `${userInput} ${keywords === "Selected Keywords..." ? "" : `Combine the ${keywords} to create a scenario for why you need to take the day off.`}`
+        : `Combine the ${keywords} to create a scenario for why you need to take the day off. Do not include any other explanation or instructions. You do not need to mention your boss' name.`;
+    } else {
+      prompt = `The boss has sent the following message: "${messageHistory[messageHistory.length - 1].bossMessage}". ${userInput.trim() !== "" ? `Your response: "${userInput}". ` : ""} Based on the message, create a response that also incorporates the tags "${keywords}". Keep it as a brief SMS response. The response should be short. Do not include any other explanation or instructions.`;
+    }
+    
+    const employeeMessage = await getGroqCompletion(prompt, 75);
   
     const specialKeywords = ["here", "photo", "attached", "picture", "show", "proof"];
     const containsSpecialKeywords = specialKeywords.some(keyword => employeeMessage.toLowerCase().includes(keyword));
@@ -176,7 +172,7 @@ export default function UnderTheWeatherPage() {
       : `You are the employer, give a response based on the following description: ${employeeMessage}. You are a bit sassy and don't easily believe your employer. Ask them a question and proof. Do not approve of the day off until you are convinced your employee is telling the truth. Communication is via SMS, so keep your response concise and brief. Do not include any other explanation or instructions. You do not need to mention the employee's name.`;
   
     const bossMessage = await getGroqCompletion(bossMessagePrompt, 75);
-  
+
     const isExcuseValid = (bossMessage: string) => {
       const validationKeywords = ['approve', 'valid', 'granted', 'accepted', 'off'];
       return validationKeywords.some(keyword => bossMessage.toLowerCase().includes(keyword));
@@ -255,10 +251,6 @@ export default function UnderTheWeatherPage() {
         setIsPopupCallTimerRunning={setIsPopupCallTimerRunning}
       />
     )}
-    <div className="flex flex-col">
-      <span className="p-2 text-white mt-4 mr-3">Day Streak: {score}</span>
-    </div>
-
       <div
         id="phoneBorder"
         className="w-full md:w-1/2 lg:w-3/6 bg-zinc-700 border border-zinc-700 border-16 rounded-lg flex flex-col items-center relative" 
@@ -314,7 +306,6 @@ export default function UnderTheWeatherPage() {
        <div className="z-10 max-w-3xl w-full items-center justify-between lg:flex bg-white">
           {tags.length > 0 && (
           <TagCloud
-            prompt={generateTagsPrompt}
             totalTags={100}
             handleSelect={(tags) => setKeywords(tags.join(", "))}
             tags={tags}
