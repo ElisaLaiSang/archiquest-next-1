@@ -4,6 +4,7 @@ import SpeechToText from "./SpeechToText";
 import { getGroqCompletion } from "@/ai/groq";
 import { Excuse } from "@/app/undertheweather/page";
 import useInterval from 'react-use/lib/useInterval';
+import GifComponent from '@/components/GifComponent';
 
 interface IncomingCallPopupProps {
   messageHistory: Excuse[];
@@ -94,13 +95,13 @@ const IncomingCallPopup: React.FC<IncomingCallPopupProps> = ({
         Your browser does not support the audio element.
       </audio>
       {isAccepted ? (
-        <div className="bg-white p-4 rounded-lg shadow-lg text-center h-64">
+         <div className="w-1/2 lg:w-1/5 bg-white p-4 rounded-lg shadow-lg text-center h-64 flex flex-col items-center">
           <h2 className="text-xl font-bold mb-2">In Call</h2>
           <p className="text-gray-600 mb-2">Call Duration: {formatTime(callDuration)}</p>
-          <div className="flex justify-center mt-4">
+          <div className="flex-grow flex flex-col justify-center items-center">
             <SpeechToText onTranscribed={handleTranscription} />
+            <TextToSpeech text={speakerText} showControls={false} autoPlay />
           </div>
-          <TextToSpeech text={speakerText} showControls={false} autoPlay />
           <div className="flex justify-center mt-4">
             <button className="bg-red-500 text-white py-2 px-4 rounded-full" onClick={onClose}>
               End Call

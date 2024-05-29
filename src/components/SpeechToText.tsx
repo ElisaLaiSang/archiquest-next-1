@@ -63,12 +63,11 @@ export default function SpeechToText({
   };
 
   return (
-    <div className="p-4 w-full flex flex-col gap-4">
+    <div className="p-4 w-full flex flex-col gap-4 items-center">
       <button className="bg-white p-2 rounded" onClick={toggleRecording}>
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
       {isRecording && <Spinner />}
-      <span>{isTranscribing ? "Transcribing..." : transcription}</span>
     </div>
   );
 }
