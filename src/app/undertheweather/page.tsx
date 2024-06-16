@@ -35,7 +35,6 @@ export default function UnderTheWeatherPage() {
   const [isPopupCallTimerRunning, setIsPopupCallTimerRunning] = useState(false);
   const [isGalleryVisible, setIsGalleryVisible] = useState(false);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
-  const [initialVolume, setInitialVolume] = useState(0.5);
   
   const audioRef = useRef<HTMLAudioElement>(null); // Reference for the audio element
 
@@ -56,8 +55,7 @@ export default function UnderTheWeatherPage() {
       const callTimer = setTimeout(() => {
         setShowPopup(true);
         if (audioRef.current) {
-          setInitialVolume(audioRef.current.volume); // Store the initial volume
-          audioRef.current.volume = 0.01; // Reduce volume when the popup appears
+          audioRef.current.volume = 0.01; // Reduce volume
         }
         setIsPopupCallTimerRunning(false);
       }, randomDelay * 1000);
@@ -67,22 +65,6 @@ export default function UnderTheWeatherPage() {
   
     startPopupCallTimer();
   }, []);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (audioRef.current && document.visibilityState === 'visible') {
-        audioRef.current.volume = initialVolume; // Restore volume when the app is visible
-      } else if (audioRef.current && document.visibilityState === 'hidden') {
-        audioRef.current.volume = 0.01; // Reduce volume when the app is hidden (e.g., when switching to another app)
-      }
-    };
-  
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-  
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [initialVolume]);
 
   useEffect(() => {
     const bossTimer = setInterval(() => {
